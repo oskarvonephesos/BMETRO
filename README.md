@@ -1,6 +1,6 @@
 # BMETRO
 
-BMETRO is a tiny application you can use to create click tracks. The app uses the NCURSES library as a GUI, so it is only available on UNIX based systems.
+BMETRO is a tiny application you can use to create click tracks in .wav format. The app uses the NCURSES library as a GUI, so it is only available on UNIX based systems.
 
 To install, download the directory and run the usual cd and make commands (make clean isn't currently necessary, because no intermediate build products are generated).
 
