@@ -1,5 +1,6 @@
 bmetro
-audio_out.wav
+*.wav
+*.mp3
 .log.txt
 .DS_STORE
 *.bm

@@ -47,6 +47,7 @@ typedef struct {
     bool mark_downbeat;
     bool hi;
     bool count_in;
+    bool conversion;
 } BMETRO_INFO;
 typedef enum {
     WELCOME,
@@ -99,6 +100,7 @@ BMETRO_INFO* init_metro_info(uint16_t num_bars){
     data->count_in      = true;
     data->hi            = true;
     data->mark_downbeat = true;
+    data->conversion = true;
     return data;
 }
 void convert_strs_to_BMETRO(char*** input, uint16_t length, BMETRO_INFO* info){
@@ -671,7 +673,18 @@ int main(int argc, const char * argv[]) {
                     }
                     //write_out(output, fout);
                 }
+                char* programm_dir = (char*) malloc(sizeof(char)*loc_length);
+                char* cd_command = (char*) malloc(sizeof(char)*loc_length+4);
+                memset(cd_command, '\0', loc_length+4);
+                memcpy(programm_dir, argv[0], loc_length);
+                memcpy(cd_command, "cd ", 3);
+                strcat(cd_command, programm_dir);
                 wav_close(fout);
+                if (info->conversion){
+                      system(cd_command);
+                system("sox audio_out.wav audio_out.mp3");
+                system("rm audio_out.wav");
+                  }
                 mvprintw(4, 10, "wrote audio"); refresh();
                 getch();
                 mode = WELCOME;
@@ -687,6 +700,7 @@ int main(int argc, const char * argv[]) {
         }
     }
     fclose(flog);
+    endwin();
     /*
     int32_t phs = 0;
     while (phs>=0){
