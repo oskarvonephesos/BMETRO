@@ -271,7 +271,7 @@ int main(int argc, const char * argv[]) {
     char* log_loc = (char*)malloc(sizeof(char*)*(loc_length +16));
     memset(log_loc, '\0', loc_length + 16);
     memcpy(log_loc, argv[0], loc_length);
-    strcat(log_loc, "log.txt");
+    strcat(log_loc, ".log.txt");
     char** save_locs = malloc(16*sizeof(char*));
     uint8_t num_saves = 0;
     for (i=0; i<16; i++){
@@ -550,6 +550,7 @@ int main(int argc, const char * argv[]) {
                     move(display_loc[0]+3, display_loc[1]); refresh();
                     echo();
                     wgetnstr(wnd, save_locs[num_saves], 16);
+                    strcat(save_locs[num_saves],".bm");
                     noecho();
                     if (length){
                         save_file = open_file(save_locs[num_saves++], "w", argv[0]);
