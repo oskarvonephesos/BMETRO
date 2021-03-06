@@ -673,18 +673,34 @@ int main(int argc, const char * argv[]) {
                     }
                     //write_out(output, fout);
                 }
-                char* programm_dir = (char*) malloc(sizeof(char)*loc_length);
-                char* cd_command = (char*) malloc(sizeof(char)*loc_length+4);
-                memset(cd_command, '\0', loc_length+4);
-                memcpy(programm_dir, argv[0], loc_length);
-                memcpy(cd_command, "cd ", 3);
-                strcat(cd_command, programm_dir);
+                char* wav_loc = (char*) malloc(sizeof(char)*(loc_length+13));
+                char* mp3_loc = (char*) malloc(sizeof(char)*(loc_length+13));
+                char* sox_command = (char*) malloc(sizeof(char)*(loc_length*2+2*13+6));
+                char* rm_command = (char*) malloc(sizeof(char)*(loc_length+13+4));
+                memset(wav_loc, '\0', loc_length+13);
+                memset(mp3_loc, '\0', loc_length+13);
+                memset(sox_command, '\0', loc_length*2+2*13+6);
+                memset(rm_command, '\0', loc_length+13+4);
+                memcpy(wav_loc, argv[0], loc_length);
+                strcat(wav_loc, "audio_out.wav");
+                memcpy(mp3_loc, argv[0], loc_length);
+                strcat(mp3_loc, "audio_out.mp3");
+                memcpy(sox_command, "sox ", 4);
+                strcat(sox_command, wav_loc);
+                strcat(sox_command, " ");
+                strcat(sox_command, mp3_loc);
+                memcpy(rm_command, "rm ", 3);
+                strcat(rm_command, wav_loc);
                 wav_close(fout);
                 if (info->conversion){
-                      system(cd_command);
-                system("sox audio_out.wav audio_out.mp3");
-                system("rm audio_out.wav");
+                system(sox_command);
+                system(rm_command);
                   }
+                  free(wav_loc);
+                  free(mp3_loc);
+                  free(sox_command);
+                  free(rm_command);
+                  erase();
                 mvprintw(4, 10, "wrote audio"); refresh();
                 getch();
                 mode = WELCOME;
