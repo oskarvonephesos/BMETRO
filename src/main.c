@@ -486,8 +486,8 @@ int main(int argc, const char * argv[]) {
                         //check whether current_line is empty
                         bool empty = line_is_empty(edit_view, current_location[0]);
                         if (empty == true){
-                                  for (j=length-1; j>0; j--){
-                                        if(line_is_empty(edit_view, j))
+                                  for (j=length; j>0; j--){
+                                        if(line_is_empty(edit_view, j-1))
                                         length --;
                                         else
                                         break;
