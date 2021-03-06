@@ -1,0 +1,6 @@
+if test -e /usr/local/Homebrew #is homebrew installed?
+      then
+make sox && make BMETRO CFLAGS=" -Dbrew"
+else
+make BMETRO
+fi;
