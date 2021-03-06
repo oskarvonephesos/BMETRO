@@ -96,7 +96,7 @@ int16_t convert_strs_to_BMETRO(char*** input, uint16_t length, BMETRO_INFO* info
             in_one = false;
             num_numerators =0;
             int ii = 0;
-            for (ii=0; ii<LEN_OF_EDIT_VIEW; ii++){
+            for (ii=0; ii<LEN_OF_EDIT_VIEW_LINES; ii++){
             if (input[i][NUMERATOR][ii]==' ')
                 input[i][NUMERATOR][ii]='\0';
             }

@@ -35,13 +35,14 @@ int main(int argc, const char * argv[]) {
         display_loc[0] = max_y -16;
     DISPLAY_MODE mode = WELCOME;
     char single_char; int single_int;
-    char*** edit_view = malloc(sizeof(char**)*128);
+    uint16_t edit_view_length = 128;
+    char*** edit_view = malloc(sizeof(char**)*edit_view_length);
     uint16_t i, j;
     uint16_t  length = 0;
-    for (i=0; i<128; i++){
+    for (i=0; i<edit_view_length; i++){
         edit_view[i]= malloc(sizeof(char*)*NUM_DISPLAY_LOCATIONS);
         for (j=0; j<NUM_DISPLAY_LOCATIONS; j++)
-        edit_view[i][j] = (char*) calloc(sizeof(char)*LEN_OF_EDIT_VIEW, 1);
+        edit_view[i][j] = (char*) calloc(sizeof(char)*LEN_OF_EDIT_VIEW_LINES, 1);
     }
     //FILE MANAGEMENT
     long loc_length = strlen(argv[0]) - 6;
@@ -71,7 +72,7 @@ int main(int argc, const char * argv[]) {
     flog = fopen(log_loc, "w");
     //AUDIO-RELATED
     float* output = (float*)malloc(sizeof(float)*BLOCKSIZE);
-    BMETRO_INFO* info = init_metro_info(16);
+    BMETRO_INFO* info = init_metro_info(32);
     while (1){
         switch (mode) {
             case WELCOME:
@@ -170,7 +171,7 @@ int main(int argc, const char * argv[]) {
             case NEW:
                 for (i=0; i<length; i++){
                     for (j=0; j<NUM_DISPLAY_LOCATIONS;j++)
-                    memset(edit_view[i][j], '\0', LEN_OF_EDIT_VIEW);
+                    memset(edit_view[i][j], '\0', LEN_OF_EDIT_VIEW_LINES);
                 }
                 length = 0;
                 //deliberate fall-through
@@ -181,16 +182,20 @@ int main(int argc, const char * argv[]) {
                 uint16_t num_lines = (max_y - 4)/2;
                 for (i=0; i<=num_lines; i++){
                     mvprintw(i*2+2, line_loc[NUMERATOR]+2, "/");
-                }
-                for (i=0; i<length; i++){
+              }
+              {
+                    uint8_t print_length = num_lines<length ? num_lines: length;
+                for (i=0; i<=print_length; i++){
                     mvprintw(i*2+2, line_loc[NUM_BARS], edit_view[i][NUM_BARS]);
                     mvprintw(i*2+2, line_loc[NUMERATOR] - strlen(edit_view[i][NUMERATOR]), edit_view[i][NUMERATOR]);
                     mvprintw(i*2+2, line_loc[DENOMINATOR], edit_view[i][DENOMINATOR]);
                     mvprintw(i*2+2, line_loc[BPM_IN], edit_view[i][BPM_IN]);
                 }
+              }
                 move(2, line_loc[NUM_BARS]+strlen(edit_view[0][0]));
                 refresh();
                 uint16_t current_location[2] = {0, 0};
+                int16_t location_y_offset = 0;
                 i = strlen(edit_view[0][0]);
                 bool location_changed = false;;
                 while(1){
@@ -212,13 +217,51 @@ int main(int argc, const char * argv[]) {
                         mode = SAVING;
                         break;
                     }
+                    //if current y_loc is at top of screen (&& bounds checking)
+                    else if (single_int == KEY_UP && current_location[0]-location_y_offset==0 && current_location[0]>0){
+                          location_y_offset--;
+                          current_location[0]--;
+                          location_changed = true;
+                          erase(); refresh();
+                          mvprintw(0, 0, "NUM BARS     TIME SIGNATURE    BPM");
+                          mvprintw(max_y-1, 0, "for navigation use arrow keys; to commit and leave this mode press 'e'; to save to file press 's'");
+                           for (j=location_y_offset; j<=num_lines+location_y_offset; j++){
+                                mvprintw((j-location_y_offset)*2+2, line_loc[NUM_BARS], edit_view[j][NUM_BARS]);
+                                mvprintw((j-location_y_offset)*2+2, line_loc[NUMERATOR] - strlen(edit_view[j][NUMERATOR]), edit_view[j][NUMERATOR]);
+                                mvprintw((j-location_y_offset)*2+2, line_loc[DENOMINATOR], edit_view[j][DENOMINATOR]);
+                                mvprintw((j-location_y_offset)*2+2, line_loc[BPM_IN], edit_view[j][BPM_IN]);
+                           }
+                           for (j=0; j<=num_lines; j++){
+                               mvprintw(j*2+2, line_loc[NUMERATOR]+2, "/");
+                         } refresh();
+                    }
+                    //else if it isn't at top of screen (but still within bounds)
                     else if (single_int == KEY_UP && current_location[0]>0){
                         location_changed = true;
                         current_location[0]--;
                     }
-                    else if (single_int == KEY_DOWN && current_location[0]<num_lines){
+                    else if (single_int == KEY_DOWN && current_location[0]-location_y_offset<num_lines){
                         location_changed = true;
                         current_location[0]++;
+                    }
+                    else if (single_int == KEY_DOWN && current_location[0]-location_y_offset>=num_lines){
+                          if (length < num_lines -2)
+                              continue;
+                              location_y_offset++;
+                              current_location[0]++;
+                              location_changed = true;
+                              erase(); refresh();
+                              mvprintw(0, 0, "NUM BARS     TIME SIGNATURE    BPM");
+                              mvprintw(max_y-1, 0, "for navigation use arrow keys; to commit and leave this mode press 'e'; to save to file press 's'");
+                                for (j=location_y_offset; j<=num_lines+location_y_offset; j++){
+                                    mvprintw((j-location_y_offset)*2+2, line_loc[NUM_BARS], edit_view[j][NUM_BARS]);
+                                    mvprintw((j-location_y_offset)*2+2, line_loc[NUMERATOR] - strlen(edit_view[j][NUMERATOR]), edit_view[j][NUMERATOR]);
+                                    mvprintw((j-location_y_offset)*2+2, line_loc[DENOMINATOR], edit_view[j][DENOMINATOR]);
+                                    mvprintw((j-location_y_offset)*2+2, line_loc[BPM_IN], edit_view[j][BPM_IN]);
+                                }
+                                for (j=0; j<=num_lines; j++){
+                                   mvprintw(j*2+2, line_loc[NUMERATOR]+2, "/");
+                             } refresh();
                     }
                     else if (single_int == KEY_RIGHT && current_location[1]<NUM_DISPLAY_LOCATIONS-1){
                         location_changed = true;
@@ -231,9 +274,9 @@ int main(int argc, const char * argv[]) {
                     else if (single_int == 127 && i>0/*backspace*/){
                         edit_view[current_location[0]][current_location[1]][--i]= '\0';
                         if (current_location[1]!=NUMERATOR)
-                         mvprintw(current_location[0]*2+2, line_loc[current_location[1]], "%s  ", edit_view[current_location[0]][current_location[1]] );
+                         mvprintw((current_location[0]-location_y_offset)*2+2, line_loc[current_location[1]], "%s  ", edit_view[current_location[0]][current_location[1]] );
                         else
-                            mvprintw(current_location[0]*2+2, line_loc[current_location[1]] - strlen(edit_view[current_location[0]][current_location[1]])-2, "  %s", edit_view[current_location[0]][current_location[1]]);
+                            mvprintw((current_location[0]-location_y_offset)*2+2, line_loc[current_location[1]] - strlen(edit_view[current_location[0]][current_location[1]])-2, "  %s", edit_view[current_location[0]][current_location[1]]);
                         //check whether current_line is empty
                         bool empty = line_is_empty(edit_view, current_location[0]);
                         if (empty == true){
@@ -251,10 +294,10 @@ int main(int argc, const char * argv[]) {
                         if ((i<3 || (i<9 && current_location[1]==NUMERATOR)|| (i<5 && current_location[1]==BPM_IN)) && (isdigit(single_char) || single_char == '.' || single_char == '+' || single_char == '(' || single_char == ')')){
                     edit_view[current_location[0]][current_location[1]][i++] = single_char;
                             if (current_location[1]==NUMERATOR){
-                                mvprintw(current_location[0]*2+2, line_loc[current_location[1]]-strlen(edit_view[current_location[0]][current_location[1]]), "%s", edit_view[current_location[0]][current_location[1]]);
+                                mvprintw((current_location[0]-location_y_offset)*2+2, line_loc[current_location[1]]-strlen(edit_view[current_location[0]][current_location[1]]), "%s", edit_view[current_location[0]][current_location[1]]);
                             }
                         else
-                        mvprintw(current_location[0]*2+2, line_loc[current_location[1]], "%s", edit_view[current_location[0]][current_location[1]]);
+                        mvprintw((current_location[0]-location_y_offset)*2+2, line_loc[current_location[1]], "%s", edit_view[current_location[0]][current_location[1]]);
                         if (current_location[0]+1>length)
                             length = current_location[0]+1;
                         refresh();
@@ -265,9 +308,9 @@ int main(int argc, const char * argv[]) {
                         location_changed = false;
                     }
                     if (current_location[1]== NUMERATOR)
-                        move (current_location[0]*2+2, line_loc[current_location[1]]);
+                        move ((current_location[0]-location_y_offset)*2+2, line_loc[current_location[1]]);
                     else
-                        move(current_location[0]*2+2, line_loc[current_location[1]]+i);
+                        move((current_location[0]-location_y_offset)*2+2, line_loc[current_location[1]]+i);
                     refresh();
                 }
                 break;

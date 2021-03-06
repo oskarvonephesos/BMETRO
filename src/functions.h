@@ -38,8 +38,8 @@
 #ifndef SILENCE
 #define SILENCE 0.0f
 #endif
-#ifndef LEN_OF_EDIT_VIEW
-#define LEN_OF_EDIT_VIEW 12
+#ifndef LEN_OF_EDIT_VIEW_LINES
+#define LEN_OF_EDIT_VIEW_LINES 12
 #endif
 typedef struct {
     int16_t* bars;
