@@ -470,34 +470,46 @@ int main(int argc, const char * argv[]) {
                 mode = WELCOME;
                     break;
             case PREFERENCES:
+                {
+                uint8_t option = 0;
                 erase(); refresh();
                 mvprintw(display_loc[0], display_loc[1], "SETTINGS");
                 mvprintw(display_loc[0]+6, display_loc[1], "TO CYCLE THROUGH SETTINGS HIT ENTER");
                 mvprintw(display_loc[0]+7, display_loc[1], "TO EXIT BACK TO MENU HIT Q");
                 refresh();
                 while (1){
+                    if (info->count_in)
+                        mvprintw(display_loc[0]+4, display_loc[1], "COUNTIN ENABLED ");
+                    else
+                        mvprintw(display_loc[0]+4, display_loc[1], "COUNTIN DISABLED");
                     if (info->mark_downbeat)
                         mvprintw(display_loc[0]+2, display_loc[1], "MARK DOWNBEAT ENABLED ");
                     else
                         mvprintw(display_loc[0]+2, display_loc[1], "MARK DOWNBEAT DISABLED");
-                        refresh();
+                    move(display_loc[0]+2+option*2, display_loc[1]-1);
+                    refresh();
                     single_int = getch(); single_char = (char) single_int;
                     if (single_char == '\n'){
-                    info->mark_downbeat = !info->mark_downbeat;
-                        info->hi = info->mark_downbeat;
+                         if(option == 0){
+                               info->mark_downbeat = !info->mark_downbeat;
+                               info->hi = info->mark_downbeat;
+                         }
+                         else {
+                        info->count_in = !info->count_in;
+                         }
                     }
+                    else if (single_int == KEY_UP && option > 0)
+                        option--;
+                    else if (single_int == KEY_DOWN && option < 2)
+                        option++;
                 else if (single_char == 'q')
                     break;
                 }
                 mode = WELCOME;
                 break;
+                }
             case OUTPUT:
                 erase(); refresh();
-                mvprintw(0, 10, "length: %d", length);
-                mvprintw(2, 10, "bpms: %f, %f", info->beat_length[0][0], info->beat_length[0][1]);
-                mvprintw(4, 10, "numerators: %d", info->numerator[0]);
-                mvprintw(6, 10, "bpm 3: %f, bpm 4: %f", info->beat_length[info->current_line][2%info->numerator[info->current_line]], info->beat_length[info->current_line][3%info->numerator[info->current_line]]);
-                refresh();
                 int32_t phs = 0;
                 WavFile* fout = open_wav_file("audio_out.wav", "wb", argv[0]);
                 while (phs>=0){
@@ -536,7 +548,12 @@ int main(int argc, const char * argv[]) {
                   free(rm_command);
                   #endif
                   erase();
-                mvprintw(4, 10, "wrote audio"); refresh();
+                if (info->count_in)
+                  mvprintw(4, 10, "wrote audio with one bar count_in");
+                else
+                  mvprintw(4, 10, "wrote audio");
+                mvprintw(7, 10, "press any key to continue");
+                refresh();
                 getch();
                 mode = WELCOME;
                 break;

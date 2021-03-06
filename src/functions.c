@@ -128,6 +128,8 @@ int16_t convert_strs_to_BMETRO(char*** input, uint16_t length, BMETRO_INFO* info
     info->bars[length] = -1;
     info->current_beat = 0;
     info->current_line = 0;
+    if (info->count_in)
+    info->bars[0] +=1;
     return -1;
 }
 uint32_t bpm_to_samp(float bpm){
