@@ -1,6 +1,18 @@
 if test -e /usr/local/Homebrew #is homebrew installed?
       then
+      if test -e ./bmetro #delete BMETRO if it exists (so as to force make with CFLAGS)
+      then
+      rm bmetro
+      fi
 make sox && make BMETRO CFLAGS=" -Dbrew"
 else
+echo #############################################################
+echo #############################################################
+echo please consider installing homebrew and rerunning ./configure
+echo of course BMETRO will still work
+echo "(if for some reason homebrew is installed, but I haven't found it)"
+echo "(please run rm bmetro && make BMETRO CFLAGS=" -Dbrew")"
+echo #############################################################
+echo #############################################################
 make BMETRO
 fi;
