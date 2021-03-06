@@ -380,8 +380,16 @@ int main(int argc, const char * argv[]) {
                     wgetnstr(wnd, save_locs[num_saves], 16);
                     strcat(save_locs[num_saves],".bm");
                     noecho();
+                    {
+                          uint8_t index = 0; bool already_exists = false;
+                          while (index<num_saves){
+                                if (strcmp(save_locs[num_saves], save_locs[index++])==0)
+                                already_exists = true;
+                          }
                     if (length){
-                        save_file = open_file(save_locs[num_saves++], "w", argv[0]);
+                        save_file = open_file(save_locs[num_saves], "w", argv[0]);
+                        if (already_exists == false)
+                              num_saves++;
                     }
                     else {
                         erase();
@@ -390,6 +398,7 @@ int main(int argc, const char * argv[]) {
                         mode = EDITING;
                         break;
                     }
+                  }
                 }
                 //write to appropiate file
                     if (save_file){
