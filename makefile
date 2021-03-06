@@ -1,6 +1,6 @@
 CC = CLANG
 CFLAGS ?=-Wno-deprecated
-SRC = src/main.c
+SRC = src/main.c src/functions.c
 LIBWAV = libwav/wav.c
 SOX_INSTALL = brew install sox
 
