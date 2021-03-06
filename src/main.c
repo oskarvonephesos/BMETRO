@@ -47,7 +47,6 @@ typedef struct {
     bool mark_downbeat;
     bool hi;
     bool count_in;
-    bool conversion;
 } BMETRO_INFO;
 typedef enum {
     WELCOME,
@@ -100,14 +99,35 @@ BMETRO_INFO* init_metro_info(uint16_t num_bars){
     data->count_in      = true;
     data->hi            = true;
     data->mark_downbeat = true;
-    data->conversion = true;
     return data;
 }
-void convert_strs_to_BMETRO(char*** input, uint16_t length, BMETRO_INFO* info){
-    uint16_t i, j; bool is_regular, in_one;
+int16_t convert_strs_to_BMETRO(char*** input, uint16_t length, BMETRO_INFO* info){
+    uint16_t i, j, k; bool is_regular, in_one;
     uint16_t numerators[12], num_numerators;
     char broken_down[32];
     memset(broken_down, '\0', 32);
+    for (i=0; i<length; i++){
+          for (j=0; j<NUM_DISPLAY_LOCATIONS; j++){
+          if (strlen(input[i][j])==0)
+            return i;
+      }
+          for (j=0; j<strlen(input[i][NUM_BARS]); j++){
+                if (isdigit(input[i][NUM_BARS][j])==0)
+                     return i;
+            }
+             for (j=0; j<strlen(input[i][NUMERATOR]); j++){
+                if(isdigit(input[i][NUMERATOR][j])==0 && input[i][NUMERATOR][j]!='(' && input[i][NUMERATOR][j]!=')' && input[i][NUMERATOR][j]!='+')
+                      return i;
+           }
+           for (j=0; j<strlen(input[i][DENOMINATOR]); j++){
+                if(isdigit(input[i][DENOMINATOR][j])==0)
+                      return i;
+           }
+           for (j=0; j<strlen(input[i][BPM_IN]); j++){
+                if(isdigit(input[i][BPM_IN][j])==0 && input[i][BPM_IN][j]!='.')
+                      return i;
+          }
+   }
     for (i=0; i<length; i++){
         info->bars[i]        = atoi(input[i][NUM_BARS]);
         info->denominator[i] = atoi(input[i][DENOMINATOR]);
@@ -159,6 +179,7 @@ void convert_strs_to_BMETRO(char*** input, uint16_t length, BMETRO_INFO* info){
     info->bars[length] = -1;
     info->current_beat = 0;
     info->current_line = 0;
+    return -1;
 }
 uint32_t bpm_to_samp(float bpm){
     float bps = bpm/60.0f;
@@ -204,6 +225,14 @@ int32_t write_sample_block(float* output, int32_t phs, BMETRO_INFO*info){
         }
     }
     return phs;
+}
+bool line_is_empty(char*** input, uint16_t line_number){
+      uint8_t i;
+      for (i=0; i<NUM_DISPLAY_LOCATIONS; i++){
+            if (input[line_number][i][0]!='\0')
+            return false;
+      }
+      return true;
 }
 ///@deprecated
 void write_out(float* sampleout, FILE* fp){
@@ -420,8 +449,12 @@ int main(int argc, const char * argv[]) {
                 while(1){
                     single_int = getch(); single_char = (char) single_int;
                     if (single_char == 'e'){
-                        mode = WELCOME;
-                        convert_strs_to_BMETRO(edit_view, length, info);
+                        if (convert_strs_to_BMETRO(edit_view, length, info)==-1)
+                              mode = WELCOME;
+                        else{
+                              //USER ALERT
+                              current_location[0] = convert_strs_to_BMETRO(edit_view, length, info);
+                        }
                         break;
                     }
                     if (single_char == 's'){
@@ -447,19 +480,18 @@ int main(int argc, const char * argv[]) {
                     else if (single_int == 127 && i>0/*backspace*/){
                         edit_view[current_location[0]][current_location[1]][--i]= '\0';
                         if (current_location[1]!=NUMERATOR)
-                         mvprintw(current_location[0]*2+2, line_loc[current_location[1]]+i, "%s  ", edit_view[current_location[0]][current_location[1]] );
+                         mvprintw(current_location[0]*2+2, line_loc[current_location[1]], "%s  ", edit_view[current_location[0]][current_location[1]] );
                         else
                             mvprintw(current_location[0]*2+2, line_loc[current_location[1]] - strlen(edit_view[current_location[0]][current_location[1]])-2, "  %s", edit_view[current_location[0]][current_location[1]]);
                         //check whether current_line is empty
-                        bool empty = true;
-                        for (j=0; j<NUM_DISPLAY_LOCATIONS; j++){
-                            if (edit_view[current_location[0]][current_location[1]][0]!=' ')
-                                empty = false;
-                        }
+                        bool empty = line_is_empty(edit_view, current_location[0]);
                         if (empty == true){
-                            //if we're in the last line, anyway
-                            if (current_location[0]== length -1)
-                                length --;
+                                  for (j=length-1; j>0; j--){
+                                        if(line_is_empty(edit_view, j))
+                                        length --;
+                                        else
+                                        break;
+                                  }
                             //move lines
                         }
                     }
@@ -673,6 +705,8 @@ int main(int argc, const char * argv[]) {
                     }
                     //write_out(output, fout);
                 }
+                wav_close(fout);
+                #ifdef brew
                 char* wav_loc = (char*) malloc(sizeof(char)*(loc_length+13));
                 char* mp3_loc = (char*) malloc(sizeof(char)*(loc_length+13));
                 char* sox_command = (char*) malloc(sizeof(char)*(loc_length*2+2*13+6));
@@ -691,15 +725,13 @@ int main(int argc, const char * argv[]) {
                 strcat(sox_command, mp3_loc);
                 memcpy(rm_command, "rm ", 3);
                 strcat(rm_command, wav_loc);
-                wav_close(fout);
-                if (info->conversion){
                 system(sox_command);
                 system(rm_command);
-                  }
                   free(wav_loc);
                   free(mp3_loc);
                   free(sox_command);
                   free(rm_command);
+                  #endif
                   erase();
                 mvprintw(4, 10, "wrote audio"); refresh();
                 getch();
