@@ -217,8 +217,18 @@ int main(int argc, const char * argv[]) {
                         mode = SAVING;
                         break;
                     }
+                    if (single_int == KEY_LEFT && current_location[1]>0){
+                        location_changed = true;
+                        current_location[1]--;
+                    }
+                    else if (single_int == KEY_LEFT){
+                          if (current_location[0]>0){
+                          single_int = KEY_UP;
+                          current_location[1] = NUM_DISPLAY_LOCATIONS-1;
+                    }
+                    }
                     //if current y_loc is at top of screen (&& bounds checking)
-                    else if (single_int == KEY_UP && current_location[0]-location_y_offset==0 && current_location[0]>0){
+                    if (single_int == KEY_UP && current_location[0]-location_y_offset==0 && current_location[0]>0){
                           location_y_offset--;
                           current_location[0]--;
                           location_changed = true;
@@ -291,10 +301,6 @@ int main(int argc, const char * argv[]) {
                                          mvprintw(j*2+2, line_loc[NUMERATOR]+2, "/");
                                    } refresh();
                           }
-                    }
-                    else if (single_int == KEY_LEFT && current_location[1]>0){
-                        location_changed = true;
-                        current_location[1]--;
                     }
                     else if (single_int == 127 && i>0/*backspace*/){
                         edit_view[current_location[0]][current_location[1]][--i]= '\0';
