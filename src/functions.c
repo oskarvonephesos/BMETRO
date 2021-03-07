@@ -59,10 +59,17 @@ int16_t convert_strs_to_BMETRO(char*** input, uint16_t length, BMETRO_INFO* info
     char broken_down[32];
     memset(broken_down, '\0', 32);
     for (i=0; i<length; i++){
+          //prevent empty strings
           for (j=0; j<NUM_DISPLAY_LOCATIONS; j++){
           if (strlen(input[i][j])==0)
             return i;
       }
+      //prevent leading zero
+      for (j=0; j<NUM_DISPLAY_LOCATIONS; j++){
+      if (input[i][j][0]=='0')
+            return i;
+      }
+      //check for appropriate chracters
           for (j=0; j<strlen(input[i][NUM_BARS]); j++){
                 if (isdigit(input[i][NUM_BARS][j])==0)
                      return i;
@@ -71,10 +78,27 @@ int16_t convert_strs_to_BMETRO(char*** input, uint16_t length, BMETRO_INFO* info
                 if(isdigit(input[i][NUMERATOR][j])==0 && input[i][NUMERATOR][j]!='(' && input[i][NUMERATOR][j]!=')' && input[i][NUMERATOR][j]!='+')
                       return i;
            }
+           //two SONDERZEICHEN may not succeed each other
+           for (j=0; j<strlen(input[i][NUMERATOR]); j++){
+                 if(input[i][NUMERATOR][j]=='(' || input[i][NUMERATOR][j]==')' || input[i][NUMERATOR][j]=='+')
+                 if (input[i][NUMERATOR][j+1] == '(' || input[i][NUMERATOR][j+1] == ')' || input[i][NUMERATOR][j+1] == '+')
+                 return i;
+          }
+          //no final +
+          for (j=0; j<strlen(input[i][NUMERATOR]); j++){
+                if(input[i][NUMERATOR][j]=='+')
+                if (input[i][NUMERATOR][j+1] == '\0')
+                return i;
+         }
+         //appropiate chars again
            for (j=0; j<strlen(input[i][DENOMINATOR]); j++){
                 if(isdigit(input[i][DENOMINATOR][j])==0)
                       return i;
            }
+           //prevent first BPM from referencing previous lines
+           if (input[0][BPM_IN][0] == '.')
+            return i;
+           //appropriate chars
            for (j=0; j<strlen(input[i][BPM_IN]); j++){
                 if(isdigit(input[i][BPM_IN][j])==0 && input[i][BPM_IN][j]!='.')
                       return i;
@@ -207,7 +231,6 @@ int32_t write_sample_block(float* output, int32_t phs, BMETRO_INFO*info){
                   }
             }
             bpm_length = bpm_to_samp(info->bpm[info->current_line]);
-
             //end of section
             if (info->current_bar >= info->bars[info->current_line]){
                 info->current_line++;
@@ -255,7 +278,6 @@ WavFile* open_wav_file(char* name, const char* restrict_mode, const char* progra
     wav_set_sample_size(fp, sizeof(float));
     wav_set_num_channels(fp, 1);
     wav_set_sample_rate(fp, SR);
-
     return fp;
 }
 int remove_file(char* name, const char* programm_loc){
