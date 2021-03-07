@@ -239,11 +239,11 @@ int main(int argc, const char * argv[]) {
                         location_changed = true;
                         current_location[0]--;
                     }
-                    else if (single_int == KEY_DOWN && current_location[0]-location_y_offset<num_lines){
+                    else if (single_int == KEY_DOWN && current_location[0]-location_y_offset<num_lines && current_location[0]<(edit_view_length-1)){
                         location_changed = true;
                         current_location[0]++;
                     }
-                    else if (single_int == KEY_DOWN && current_location[0]-location_y_offset>=num_lines){
+                    else if (single_int == KEY_DOWN && current_location[0]-location_y_offset>=num_lines && current_location[0]<(edit_view_length-1)){
                           if (length < num_lines -2)
                               continue;
                               location_y_offset++;
