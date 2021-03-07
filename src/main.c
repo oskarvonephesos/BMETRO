@@ -175,6 +175,7 @@ int main(int argc, const char * argv[]) {
                 length = 0;
                 //deliberate fall-through
             case EDITING:
+                  mode = EDITING;
                 noecho(); erase(); refresh();
                 mvprintw(0, 0, "NUM BARS     TIME SIGNATURE    BPM");
                 mvprintw(max_y-1, 0, "for navigation use arrow keys; to commit and leave this mode press 'e'; to save to file press 's'"); refresh();
@@ -265,6 +266,31 @@ int main(int argc, const char * argv[]) {
                     else if (single_int == KEY_RIGHT && current_location[1]<NUM_DISPLAY_LOCATIONS-1){
                         location_changed = true;
                         current_location[1]++;
+                    }
+                    else if (single_int == KEY_RIGHT){
+                          location_changed = true;
+                          current_location[1] = 0;
+                          if (current_location[0]-location_y_offset<num_lines && current_location[0]<(edit_view_length-1))
+                          current_location[0]++;
+                          else {
+                                if (length < num_lines -2)
+                                    continue;
+                                    location_y_offset++;
+                                    current_location[0]++;
+                                    location_changed = true;
+                                    erase(); refresh();
+                                    mvprintw(0, 0, "NUM BARS     TIME SIGNATURE    BPM");
+                                    mvprintw(max_y-1, 0, "for navigation use arrow keys; to commit and leave this mode press 'e'; to save to file press 's'");
+                                      for (j=location_y_offset; j<=num_lines+location_y_offset; j++){
+                                          mvprintw((j-location_y_offset)*2+2, line_loc[NUM_BARS], edit_view[j][NUM_BARS]);
+                                          mvprintw((j-location_y_offset)*2+2, line_loc[NUMERATOR] - strlen(edit_view[j][NUMERATOR]), edit_view[j][NUMERATOR]);
+                                          mvprintw((j-location_y_offset)*2+2, line_loc[DENOMINATOR], edit_view[j][DENOMINATOR]);
+                                          mvprintw((j-location_y_offset)*2+2, line_loc[BPM_IN], edit_view[j][BPM_IN]);
+                                      }
+                                      for (j=0; j<=num_lines; j++){
+                                         mvprintw(j*2+2, line_loc[NUMERATOR]+2, "/");
+                                   } refresh();
+                          }
                     }
                     else if (single_int == KEY_LEFT && current_location[1]>0){
                         location_changed = true;
