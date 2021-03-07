@@ -524,17 +524,17 @@ int main(int argc, const char * argv[]) {
                 #ifdef brew
                 char* wav_loc = (char*) malloc(sizeof(char)*(loc_length+13));
                 char* mp3_loc = (char*) malloc(sizeof(char)*(loc_length+13));
-                char* sox_command = (char*) malloc(sizeof(char)*(loc_length*2+2*13+6));
+                char* sox_command = (char*) malloc(sizeof(char)*(loc_length*2+2*13+10));
                 char* rm_command = (char*) malloc(sizeof(char)*(loc_length+13+4));
                 memset(wav_loc, '\0', loc_length+13);
                 memset(mp3_loc, '\0', loc_length+13);
-                memset(sox_command, '\0', loc_length*2+2*13+6);
+                memset(sox_command, '\0', loc_length*2+2*13+10);
                 memset(rm_command, '\0', loc_length+13+4);
                 memcpy(wav_loc, argv[0], loc_length);
                 strcat(wav_loc, "audio_out.wav");
                 memcpy(mp3_loc, argv[0], loc_length);
                 strcat(mp3_loc, "audio_out.mp3");
-                memcpy(sox_command, "sox ", 4);
+                memcpy(sox_command, "sox -V0 ", 8);
                 strcat(sox_command, wav_loc);
                 strcat(sox_command, " ");
                 strcat(sox_command, mp3_loc);
