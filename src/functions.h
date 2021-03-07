@@ -26,21 +26,11 @@
 #include <unistd.h>
 #include "../libwav/wav.h"
 
-#ifndef SR
 #define SR 44100
-#endif
-#ifndef BLOCKSIZE
 #define BLOCKSIZE 1024
-#endif
-#ifndef TAB_LENGTH
 #define TAB_LENGTH 2048
-#endif
-#ifndef SILENCE
 #define SILENCE 0.0f
-#endif
-#ifndef LEN_OF_EDIT_VIEW_LINES
 #define LEN_OF_EDIT_VIEW_LINES 12
-#endif
 typedef struct {
     int16_t* bars;
     int16_t** numerator;
@@ -77,7 +67,6 @@ typedef enum {
     NUM_DISPLAY_LOCATIONS
 } DISPLAY_LOC;
 
-//using x = a * exp(-k/T) and k = dur/nsteps
 float* init_click(float freq);
 BMETRO_INFO* init_metro_info(uint16_t num_bars);
 int16_t convert_strs_to_BMETRO(char*** input, uint16_t length, BMETRO_INFO* info);

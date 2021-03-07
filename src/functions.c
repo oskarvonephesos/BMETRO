@@ -267,10 +267,3 @@ int remove_file(char* name, const char* programm_loc){
     strcat(file_path, name);
     return remove(file_path);
 }
-///@deprecated
-void write_out(float* sampleout, FILE* fp){
-    int i;
-    for (i=0; i<BLOCKSIZE; i++){
-        fwrite(&(sampleout[i]), sizeof(float), 1, fp);
-    }
-}

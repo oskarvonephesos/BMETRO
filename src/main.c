@@ -17,7 +17,6 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
     **/
 
-#include <stdio.h>
 #include <ncurses.h>
 #include <curses.h>
 #include "functions.h"
