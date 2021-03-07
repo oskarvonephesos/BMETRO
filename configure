@@ -6,6 +6,14 @@ if test -e /usr/local/Homebrew #is homebrew installed?
       fi
 make sox && make BMETRO CFLAGS=" -Dbrew"
 else
+      if test -e /opt/homebrew #alternative location
+      then
+            if test -e ./bmetro
+            then
+            rm bmetro
+            fi
+      make sox && make BMETRO CFLAGS=" -Dbrew"
+      fi
 echo #############################################################
 echo #############################################################
 echo Please consider installing Homebrew and rerunning ./configure.
