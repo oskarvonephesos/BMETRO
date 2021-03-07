@@ -43,12 +43,15 @@
 #endif
 typedef struct {
     int16_t* bars;
-    uint16_t* numerator;
+    int16_t** numerator;
     uint16_t* denominator;
     float* bpm;
-    float** beat_length;
     uint16_t current_line;
+    uint16_t current_subdv;
     uint16_t current_beat;
+    uint16_t current_bar;
+    bool* in_one;
+    bool* is_regular;
     float* lo_click_tab;
     float* hi_click_tab;
     bool mark_downbeat;

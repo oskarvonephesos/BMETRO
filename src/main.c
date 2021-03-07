@@ -511,6 +511,7 @@ int main(int argc, const char * argv[]) {
             case OUTPUT:
                 erase(); refresh();
                 int32_t phs = 0;
+                info->current_line = info->current_bar = info->current_beat = info->current_subdv = 0;
                 WavFile* fout = open_wav_file("audio_out.wav", "wb", argv[0]);
                 while (phs>=0){
                     phs = write_sample_block(output, phs, info);

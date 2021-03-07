@@ -33,15 +33,18 @@ float* init_click(float freq){
 BMETRO_INFO* init_metro_info(uint16_t num_bars){
     BMETRO_INFO* data = (BMETRO_INFO*) malloc(sizeof(BMETRO_INFO));
     data->bars        = (int16_t*)malloc(sizeof(int16_t)*num_bars);
-    data->numerator   = (uint16_t*)malloc(sizeof(uint16_t)*num_bars);
+    data->numerator   = malloc(sizeof(int16_t*)*num_bars);
     data->denominator = (uint16_t*)malloc(sizeof(uint16_t)*num_bars);
     data->bpm         = (float*)malloc(sizeof(float)*num_bars);
-    data->beat_length = malloc(sizeof(float)*num_bars);
+    data->in_one      = (bool*)malloc(sizeof(bool)*num_bars);
+    data->is_regular  = (bool*)malloc(sizeof(bool)*num_bars);
     int i;
     for (i=0; i<num_bars; i++)
-        data->beat_length[i] = (float*)malloc(sizeof(float)*12);
+        data->numerator[i] = (int16_t*)malloc(sizeof(int16_t)*16);
     data->current_line  = 0;
     data->current_beat  = 0;
+    data->current_bar   = 0;
+    data->current_subdv = 0;
     data->mark_downbeat = false;
     data->lo_click_tab  = init_click(1000.0);
     data->hi_click_tab  = init_click(1750.0);
@@ -86,44 +89,59 @@ int16_t convert_strs_to_BMETRO(char*** input, uint16_t length, BMETRO_INFO* info
         else
             info->bpm[i] = atof(input[i][BPM_IN]);
         if (input[i][NUMERATOR][0]== '('){
-            info->numerator[i] = 1;
-            in_one = true;
+             in_one = true;
+             if (input[i][NUMERATOR][2]=='+'||input[i][NUMERATOR][3]=='+'||input[i][NUMERATOR][4]=='+'){
+                   num_numerators = 0;
+                   uint32_t ii = 1; //this has to be a very large data type, so that sscanf fails
+                   while(sscanf(&input[i][NUMERATOR][ii], "%hd", &numerators[num_numerators++])){
+                        while(input[i][NUMERATOR][ii++]!='+')
+                        ;
+                  }
+                  ii = 0;
+                  uint32_t jj =0;
+                  while (jj<strlen(input[i][NUMERATOR])){
+                        if (input[i][NUMERATOR][jj++]=='+')
+                         ii++;
+                  }
+                  num_numerators = ii+1;
+                  for (ii=0; ii<num_numerators; ii++)
+                  info->numerator[i][ii]=numerators[ii];
+                  info->numerator[i][num_numerators]=-1;
+             }
+             else {
+            info->numerator[i][0] = atoi(&input[i][NUMERATOR][1]);
+            info->numerator[i][1] = -1;
             is_regular = true;
-
+      }
         }
-        else if (input[i][NUMERATOR][1]=='+'){
+        else if (input[i][NUMERATOR][1]=='+'||input[i][NUMERATOR][2]=='+'||input[i][NUMERATOR][3]=='+'){
             is_regular = false;
             in_one = false;
-            num_numerators =0;
-            int ii = 0;
-            for (ii=0; ii<LEN_OF_EDIT_VIEW_LINES; ii++){
-            if (input[i][NUMERATOR][ii]==' ')
-                input[i][NUMERATOR][ii]='\0';
-            }
-            ii=0;
+            num_numerators = 0;
+            uint32_t ii = 0; //this has to be a very large data type, so that sscanf fails
             while(sscanf(&input[i][NUMERATOR][ii], "%hd", &numerators[num_numerators++])){
                 while(input[i][NUMERATOR][ii++]!='+')
                     ;
             }
-            info->numerator[i]=num_numerators-1;
+            ii = 0;
+            uint32_t jj =0;
+            while (jj<strlen(input[i][NUMERATOR])){
+                  if (input[i][NUMERATOR][jj++]=='+')
+                   ii++;
+            }
+            num_numerators = ii+1;
+            for (ii=0; ii<num_numerators; ii++)
+                  info->numerator[i][ii]=numerators[ii];
+            info->numerator[i][num_numerators]=-1;
         }
         else{
-            info->numerator[i]   = atoi(input[i][NUMERATOR]);
+            info->numerator[i][0]   = atoi(input[i][NUMERATOR]);
+            info->numerator[i][1]   = -1;
             in_one = false;
             is_regular = true;
         }
-        if (is_regular){
-            if (!in_one){
-            for (j=0; j<info->numerator[i]; j++)
-            info->beat_length[i][j]=info->bpm[i];
-            }
-            else
-                info->beat_length[i][0]=info->bpm[i]/atoi(&input[i][NUMERATOR][1]);
-        }
-        else {
-            for (j=0; j<info->numerator[i]; j++)
-            info->beat_length[i][j]=info->bpm[i]/numerators[j];
-        }
+        info->in_one[i] = in_one;
+        info->is_regular[i]= is_regular;
     }
     info->bars[length] = -1;
     info->current_beat = 0;
@@ -139,21 +157,39 @@ uint32_t bpm_to_samp(float bpm){
 int32_t write_sample_block(float* output, int32_t phs, BMETRO_INFO*info){
     uint16_t i;
     float* click_tab;
-    if (info->hi)
-        click_tab = info->hi_click_tab;
-    else
-        click_tab = info->lo_click_tab;
-    uint32_t bpm_length = bpm_to_samp(info->beat_length[info->current_line][info->current_beat%info->numerator[info->current_line]]);
+    if (info->hi && info->mark_downbeat){
+          click_tab = info->hi_click_tab;
+   }
+   else {
+         click_tab = info->lo_click_tab;
+   }
+    static float volume = 1.0f;
+    uint32_t bpm_length = bpm_to_samp(info->bpm[info->current_line]);
     for (i=0; i<BLOCKSIZE; i++){
         if (phs<TAB_LENGTH){
-            output[i]=click_tab[phs];
+            output[i]=volume*click_tab[phs];
         }
         else if (phs==TAB_LENGTH){
             output[i]= SILENCE;
-            if (((info->current_beat+1)%info->numerator[info->current_line])==0)
+            if (((info->current_beat+1)%info->numerator[info->current_line][info->current_subdv])==0 && info->numerator[info->current_line][info->current_subdv+1]==-1){
                 info->hi = true;
-            else
+                volume = 1.0f;
+          }
+            else if (((info->current_beat+1)%info->numerator[info->current_line][info->current_subdv])==0 ){
+              volume = 1.0f;
+              info->hi = false;
+            }
+            else{
+                if (!info->is_regular[info->current_line]&& ! info->in_one[info->current_line])
+                  volume = 0.4f;
+                else if (info->in_one[info->current_line]){
+                      volume = 0.0f;
+                }
+                 else{
+                 volume = 1.0f;
+           }
                 info->hi = false;
+               }
         }
         else {
             output[i]= SILENCE;
@@ -162,16 +198,26 @@ int32_t write_sample_block(float* output, int32_t phs, BMETRO_INFO*info){
         if (phs>=bpm_length){
             phs = 0;
             info->current_beat++;
-            bpm_length = bpm_to_samp(info->beat_length[info->current_line][info->current_beat%info->numerator[info->current_line]]);
+            if (info->current_beat >= info->numerator[info->current_line][info->current_subdv]){
+                  info->current_beat = 0;
+                  info->current_subdv++;
+                  if (info->numerator[info->current_line][info->current_subdv] ==-1){
+                        info->current_subdv = 0;
+                        info->current_bar++;
+                  }
+            }
+            bpm_length = bpm_to_samp(info->bpm[info->current_line]);
 
             //end of section
-            if (info->current_beat >= info->numerator[info->current_line] * info->bars[info->current_line]){
+            if (info->current_bar >= info->bars[info->current_line]){
                 info->current_line++;
                 if (info->bars[info->current_line] == -1){
                     return -1;
                 }
-                info->current_beat = 0;
-                bpm_length = bpm_to_samp(info->beat_length[info->current_line][0]);
+                info->current_beat  = 0;
+                info->current_subdv = 0;
+                info->current_bar   = 0;
+                bpm_length = bpm_to_samp(info->bpm[info->current_line]);
             }
         }
     }
