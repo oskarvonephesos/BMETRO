@@ -47,6 +47,7 @@ typedef struct {
     bool mark_downbeat;
     bool hi;
     bool count_in;
+    uint16_t length;
 } BMETRO_INFO;
 typedef enum {
     WELCOME,
@@ -69,7 +70,7 @@ typedef enum {
 
 float* init_click(float freq);
 BMETRO_INFO* init_metro_info(uint16_t num_bars);
-int16_t convert_strs_to_BMETRO(char*** input, uint16_t length, BMETRO_INFO* info);
+int16_t convert_strs_to_BMETRO(char*** input, uint16_t length, BMETRO_INFO** info);
 uint32_t bpm_to_samp(float bpm);
 int32_t write_sample_block(float* output, int32_t phs, BMETRO_INFO*info);
 bool line_is_empty(char*** input, uint16_t line_number);

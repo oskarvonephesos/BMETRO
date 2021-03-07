@@ -200,11 +200,11 @@ int main(int argc, const char * argv[]) {
                 while(1){
                     single_int = getch(); single_char = (char) single_int;
                     if (single_char == 'e'){
-                        if (convert_strs_to_BMETRO(edit_view, length, info)==-1)
+                        if (convert_strs_to_BMETRO(edit_view, length, &info)==-1)
                               mode = WELCOME;
                         else{
                               //USER ALERT
-                              current_location[0] = convert_strs_to_BMETRO(edit_view, length, info);
+                              current_location[0] = convert_strs_to_BMETRO(edit_view, length, &info);
                               erase(); refresh();
                               mvprintw(display_loc[0], display_loc[1], "PARSING YOUR DATA HAS CREATED AN ERROR ON LINE %d", current_location[0]+1);
                               mvprintw(display_loc[0]+2, display_loc[1], "PRESS ANY KEY TO CONTINUE");

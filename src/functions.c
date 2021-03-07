@@ -51,12 +51,17 @@ BMETRO_INFO* init_metro_info(uint16_t num_bars){
     data->count_in      = true;
     data->hi            = true;
     data->mark_downbeat = true;
+    data->length        = num_bars;
     return data;
 }
-int16_t convert_strs_to_BMETRO(char*** input, uint16_t length, BMETRO_INFO* info){
+int16_t convert_strs_to_BMETRO(char*** input, uint16_t length, BMETRO_INFO** info){
     uint16_t i, j, k; bool is_regular, in_one;
     uint16_t numerators[12], num_numerators;
     char broken_down[32];
+    if (length+1 > (*info)->length){
+          free(*info);
+      *info = init_metro_info(length*2);
+}
     memset(broken_down, '\0', 32);
     for (i=0; i<length; i++){
           //prevent empty strings
@@ -105,13 +110,13 @@ int16_t convert_strs_to_BMETRO(char*** input, uint16_t length, BMETRO_INFO* info
           }
    }
     for (i=0; i<length; i++){
-        info->bars[i]        = atoi(input[i][NUM_BARS]);
-        info->denominator[i] = atoi(input[i][DENOMINATOR]);
+        (*info)->bars[i]        = atoi(input[i][NUM_BARS]);
+        (*info)->denominator[i] = atoi(input[i][DENOMINATOR]);
         if (input[i][BPM_IN][0]== '.'){
-            info->bpm[i] = info->bpm[i-1]*info->denominator[i]/info->denominator[i-1];
+            (*info)->bpm[i] = (*info)->bpm[i-1]*(*info)->denominator[i]/(*info)->denominator[i-1];
         }
         else
-            info->bpm[i] = atof(input[i][BPM_IN]);
+            (*info)->bpm[i] = atof(input[i][BPM_IN]);
         if (input[i][NUMERATOR][0]== '('){
              in_one = true;
              if (input[i][NUMERATOR][2]=='+'||input[i][NUMERATOR][3]=='+'||input[i][NUMERATOR][4]=='+'){
@@ -129,12 +134,12 @@ int16_t convert_strs_to_BMETRO(char*** input, uint16_t length, BMETRO_INFO* info
                   }
                   num_numerators = ii+1;
                   for (ii=0; ii<num_numerators; ii++)
-                  info->numerator[i][ii]=numerators[ii];
-                  info->numerator[i][num_numerators]=-1;
+                  (*info)->numerator[i][ii]=numerators[ii];
+                  (*info)->numerator[i][num_numerators]=-1;
              }
              else {
-            info->numerator[i][0] = atoi(&input[i][NUMERATOR][1]);
-            info->numerator[i][1] = -1;
+            (*info)->numerator[i][0] = atoi(&input[i][NUMERATOR][1]);
+            (*info)->numerator[i][1] = -1;
             is_regular = true;
       }
         }
@@ -155,23 +160,23 @@ int16_t convert_strs_to_BMETRO(char*** input, uint16_t length, BMETRO_INFO* info
             }
             num_numerators = ii+1;
             for (ii=0; ii<num_numerators; ii++)
-                  info->numerator[i][ii]=numerators[ii];
-            info->numerator[i][num_numerators]=-1;
+                  (*info)->numerator[i][ii]=numerators[ii];
+            (*info)->numerator[i][num_numerators]=-1;
         }
         else{
-            info->numerator[i][0]   = atoi(input[i][NUMERATOR]);
-            info->numerator[i][1]   = -1;
+            (*info)->numerator[i][0]   = atoi(input[i][NUMERATOR]);
+            (*info)->numerator[i][1]   = -1;
             in_one = false;
             is_regular = true;
         }
-        info->in_one[i] = in_one;
-        info->is_regular[i]= is_regular;
+        (*info)->in_one[i] = in_one;
+        (*info)->is_regular[i]= is_regular;
     }
-    info->bars[length] = -1;
-    info->current_beat = 0;
-    info->current_line = 0;
-    if (info->count_in)
-    info->bars[0] +=1;
+    (*info)->bars[length] = -1;
+    (*info)->current_beat = 0;
+    (*info)->current_line = 0;
+    if ((*info)->count_in)
+    (*info)->bars[0] +=1;
     return -1;
 }
 uint32_t bpm_to_samp(float bpm){
