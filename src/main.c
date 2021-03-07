@@ -376,7 +376,16 @@ int main(int argc, const char * argv[]) {
                     mvprintw(display_loc[0], display_loc[1], "ENTER FILE NAME:");
                     move(display_loc[0]+3, display_loc[1]); refresh();
                     echo();
-                    wgetnstr(wnd, save_locs[num_saves], 16);
+                    wgetnstr(wnd, save_locs[num_saves], 16);{
+                          uint16_t index; bool to_break = false;
+                          for (index = 0; index < strlen(save_locs[num_saves]); index++)
+                          if (save_locs[num_saves][index]=='/'){
+                                    erase(); mvprintw(display_loc[0], display_loc[1], "ILLEGAL CHAR"); refresh(); sleep(1); to_break = true;
+                                    break;
+                              }
+                        if (to_break)
+                        break;
+                    }
                     strcat(save_locs[num_saves],".bm");
                     noecho();
                     {
