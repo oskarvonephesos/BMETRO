@@ -32,8 +32,10 @@ for (j=0; j<max_y; j++){
 }
 mvprintw(0, 0, "NUM BARS     TIME SIGNATURE    BPM");
 mvprintw(0, divider +2, "           for navigation use arrow keys");
-mvprintw(2, divider +2, "            to exit this mode press 'e'");
-mvprintw(4, divider +2, "             to save to file press 's'");
+mvprintw(1, divider +2, "            to insert a line press 'i'");
+mvprintw(2, divider +2, "            to delete a line press 'd'");
+mvprintw(3, divider +2, "            to exit this mode press 'e'");
+mvprintw(5, divider +2, "             to save to file press 's'");
 mvprintw(6, divider +2, "             to write audio press 'w'");
 mvprintw(9, divider +2, "             A / B produces A pulses");
 mvprintw(11, divider +2, "      (A)/ B produces one pulse of A duration");
@@ -212,23 +214,23 @@ int main(int argc, const char * argv[]) {
                 while(1){
                     single_int = getch(); single_char = (char) single_int;
                     if (single_char == 'e'){
-                         char* error_text;
-                        if (convert_strs_to_BMETRO(edit_view, length, &info, &error_text)==-1)
                               mode = WELCOME;
-                        else{
-                              //USER ALERT
-                              current_location[0] = convert_strs_to_BMETRO(edit_view, length, &info, &error_text);
-                              erase(); refresh();
-                              mvprintw(display_loc[0], display_loc[1], "PARSING YOUR DATA HAS CREATED AN ERROR ON LINE %d", current_location[0]+1);
-                              mvprintw(display_loc[0]+1, display_loc[1]," THE ERROR WAS: %s", error_text);
-                              mvprintw(display_loc[0]+3, display_loc[1], "PRESS ANY KEY TO CONTINUE");
-                              getch();
-                        }
                         break;
                     }
                     if (single_char == 's'){
-                        mode = SAVING;
-                        break;
+                          char* error_text;
+                          if (convert_strs_to_BMETRO(edit_view, length, &info, &error_text)==-1)
+                                mode = SAVING;
+                          else{
+                                //USER ALERT
+                                current_location[0] = convert_strs_to_BMETRO(edit_view, length, &info, &error_text);
+                                erase(); refresh();
+                                mvprintw(display_loc[0], display_loc[1], "PARSING YOUR DATA HAS CREATED AN ERROR ON LINE %d", current_location[0]+1);
+                                mvprintw(display_loc[0]+1, display_loc[1]," THE ERROR WAS: %s", error_text);
+                                mvprintw(display_loc[0]+3, display_loc[1], "PRESS ANY KEY TO CONTINUE");
+                                getch();
+                          }
+                          break;
                     }
                     if (single_char == 'w'){
                           char* error_text;
@@ -295,6 +297,30 @@ int main(int argc, const char * argv[]) {
                                     location_changed = true;
                                     redraw_edit_screen(edit_view, location_y_offset, num_lines, max_y, max_x);
                           }
+                    }
+                    else if (single_char == 'i'){
+                          if (length>edit_view_length-1)
+                              continue;
+                          uint16_t jj;
+                          for (j=edit_view_length-1; j>current_location[0]; j--){
+                                for (jj=0; jj<NUM_DISPLAY_LOCATIONS; jj++)
+                                    memcpy(edit_view[j][jj], edit_view[j-1][jj], LEN_OF_EDIT_VIEW_LINES);
+                              }
+                              for (j=0; j<NUM_DISPLAY_LOCATIONS; j++)
+                              memset(edit_view[current_location[0]][j], '\0', LEN_OF_EDIT_VIEW_LINES);
+                          location_changed = true;
+                          redraw_edit_screen(edit_view, location_y_offset, num_lines, max_y, max_x);
+                    }
+                    else if (single_char == 'd'){
+                          uint16_t jj;
+                          for (j=current_location[0]; j<edit_view_length-1; j++){
+                                for(jj=0; jj<NUM_DISPLAY_LOCATIONS; jj++)
+                                    memcpy(edit_view[j][jj], edit_view[j+1][jj], LEN_OF_EDIT_VIEW_LINES);
+                          }
+                          for (j=0; j<NUM_DISPLAY_LOCATIONS; j++)
+                                memset(edit_view[edit_view_length-1][j], '\0', LEN_OF_EDIT_VIEW_LINES);
+                          location_changed = true;
+                          redraw_edit_screen(edit_view, location_y_offset, num_lines, max_y, max_x);
                     }
                     else if (single_int == 127 && i>0/*backspace*/){
                         edit_view[current_location[0]][current_location[1]][--i]= '\0';
