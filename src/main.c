@@ -484,6 +484,8 @@ int main(int argc, const char * argv[]) {
                 for (i=0; i<num_saves; i++){
                     mvprintw(display_loc[0]+2+2*i, display_loc[1], "%s", save_locs[i]);
                 }
+                mvprintw(display_loc[0]+2+(2*num_saves), display_loc[1], "If your file doesn't show up, place it");
+                mvprintw(display_loc[0]+3+(2*num_saves), display_loc[1], "in this folder and choose this option");
                 move(display_loc[0]+2, display_loc[1]-1);
                 refresh();
                 uint8_t chosen = 0;
@@ -491,12 +493,28 @@ int main(int argc, const char * argv[]) {
                     single_int = getch(); single_char = (char) single_int;
                     if (single_int == KEY_UP && chosen > 0)
                         chosen--;
-                    else if (single_int == KEY_DOWN && chosen<num_saves)
+                    else if (single_int == KEY_DOWN && chosen<=num_saves)
                         chosen++;
                     else if (single_char == '\n')
                         break;
                     move(display_loc[0] + 2+ 2*chosen, display_loc[1]-1);
                     refresh();
+                }
+                if (chosen==num_saves){
+                      fclose(flog);
+                      system("ls *.bm >> .log.txt");
+                      char scan_line[256];
+                     flog = fopen(log_loc, "r");
+                     i=0;
+                     while (fgets(scan_line, 256, flog)){
+                         sscanf(scan_line, "%s\n", save_locs[i]);
+                         i++;
+                     }
+                     num_saves = i;
+                     fclose(flog);
+                     remove_file(log_loc, argv[0]);
+                     flog = fopen(log_loc, "w");
+                      break;
                 }
                 FILE* load_file = open_file(save_locs[chosen], "r", argv[0]);
                 if (load_file){
