@@ -54,7 +54,16 @@ BMETRO_INFO* init_metro_info(uint16_t num_bars){
     data->length        = num_bars;
     return data;
 }
-int16_t convert_strs_to_BMETRO(char*** input, uint16_t length, BMETRO_INFO** info){
+char error_strings[7][32]={
+      "EMPTY STRING",
+      "LEADING ZERO / SONDERZEICHEN",
+      "EXPECTED DIGIT",
+      "FINAL + / (",
+      "SUCCESSION OF SONDERZEICHEN",
+      "FIRST BPM IS .",
+      "MISC ERROR"
+};
+int16_t convert_strs_to_BMETRO(char*** input, uint16_t length, BMETRO_INFO** info, char** error_text){
     uint16_t i, j, k; bool is_regular, in_one;
     uint16_t numerators[12], num_numerators;
     char broken_down[32];
@@ -66,47 +75,85 @@ int16_t convert_strs_to_BMETRO(char*** input, uint16_t length, BMETRO_INFO** inf
     for (i=0; i<length; i++){
           //prevent empty strings
           for (j=0; j<NUM_DISPLAY_LOCATIONS; j++){
-          if (strlen(input[i][j])==0)
-            return i;
+          if (strlen(input[i][j])==0){
+                *error_text = error_strings[0];
+                  return i;
+          }
       }
       //prevent leading zero
       for (j=0; j<NUM_DISPLAY_LOCATIONS; j++){
-      if (input[i][j][0]=='0')
-            return i;
+      if (input[i][j][0]=='0' ){
+           *error_text = error_strings[1];
+             return i;
+      }
+      }
+      //prevent leading SONDERZEICHEN
+      for (j=0; j<NUM_DISPLAY_LOCATIONS; j++){
+      if (input[i][j][0] == '+' || input[i][j][0] == ')' ){
+           *error_text = error_strings[1];
+             return i;
+      }
+      }
+      //( and + have to be followed by a non-zero digit
+      for (j=0; j<strlen(input[i][NUMERATOR]); j++){
+            if (input[i][NUMERATOR][j] == '(' || input[i][NUMERATOR][j] == '+'){
+                  if (isdigit(input[i][NUMERATOR][j+1])==0){
+                        *error_text = error_strings[2];
+                        return i;
+                  }
+                  else if (input[i][NUMERATOR][j+1]=='0'){
+                        *error_text = error_strings[1];
+                        return i;
+                  }
+            }
       }
       //check for appropriate chracters
           for (j=0; j<strlen(input[i][NUM_BARS]); j++){
-                if (isdigit(input[i][NUM_BARS][j])==0)
-                     return i;
+                if (isdigit(input[i][NUM_BARS][j])==0){
+                     *error_text = error_strings[2];
+                       return i;
+               }
             }
              for (j=0; j<strlen(input[i][NUMERATOR]); j++){
-                if(isdigit(input[i][NUMERATOR][j])==0 && input[i][NUMERATOR][j]!='(' && input[i][NUMERATOR][j]!=')' && input[i][NUMERATOR][j]!='+')
-                      return i;
+                if(isdigit(input[i][NUMERATOR][j])==0 && input[i][NUMERATOR][j]!='(' && input[i][NUMERATOR][j]!=')' && input[i][NUMERATOR][j]!='+'){
+                     *error_text = error_strings[6];
+                       return i;
+               }
            }
            //two SONDERZEICHEN may not succeed each other
            for (j=0; j<strlen(input[i][NUMERATOR]); j++){
                  if(input[i][NUMERATOR][j]=='(' || input[i][NUMERATOR][j]==')' || input[i][NUMERATOR][j]=='+')
-                 if (input[i][NUMERATOR][j+1] == '(' || input[i][NUMERATOR][j+1] == ')' || input[i][NUMERATOR][j+1] == '+')
-                 return i;
+                 if (input[i][NUMERATOR][j+1] == '(' || input[i][NUMERATOR][j+1] == ')' || input[i][NUMERATOR][j+1] == '+'){
+                       *error_text = error_strings[4];
+                         return i;
+                 }
           }
           //no final +
           for (j=0; j<strlen(input[i][NUMERATOR]); j++){
-                if(input[i][NUMERATOR][j]=='+')
-                if (input[i][NUMERATOR][j+1] == '\0')
-                return i;
+                if(input[i][NUMERATOR][j]=='+' || input[i][NUMERATOR][j]=='(')
+                if (input[i][NUMERATOR][j+1] == '\0'){
+                     *error_text = error_strings[3];
+                       return i;
+               }
          }
          //appropiate chars again
            for (j=0; j<strlen(input[i][DENOMINATOR]); j++){
-                if(isdigit(input[i][DENOMINATOR][j])==0)
-                      return i;
+                if(isdigit(input[i][DENOMINATOR][j])==0){
+                     *error_text = error_strings[2];
+                       return i;
+               }
            }
            //prevent first BPM from referencing previous lines
-           if (input[0][BPM_IN][0] == '.')
-            return i;
+           if (input[0][BPM_IN][0] == '.'){
+                *error_text = error_strings[5];
+                  return i;
+          }
            //appropriate chars
            for (j=0; j<strlen(input[i][BPM_IN]); j++){
-                if(isdigit(input[i][BPM_IN][j])==0 && input[i][BPM_IN][j]!='.')
-                      return i;
+                if(isdigit(input[i][BPM_IN][j])==0 && input[i][BPM_IN][j]!='.'){
+                     *error_text = error_strings[2];
+                       return i;
+               }
           }
    }
     for (i=0; i<length; i++){

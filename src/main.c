@@ -211,14 +211,16 @@ int main(int argc, const char * argv[]) {
                 while(1){
                     single_int = getch(); single_char = (char) single_int;
                     if (single_char == 'e'){
-                        if (convert_strs_to_BMETRO(edit_view, length, &info)==-1)
+                         char* error_text;
+                        if (convert_strs_to_BMETRO(edit_view, length, &info, &error_text)==-1)
                               mode = WELCOME;
                         else{
                               //USER ALERT
-                              current_location[0] = convert_strs_to_BMETRO(edit_view, length, &info);
+                              current_location[0] = convert_strs_to_BMETRO(edit_view, length, &info, &error_text);
                               erase(); refresh();
                               mvprintw(display_loc[0], display_loc[1], "PARSING YOUR DATA HAS CREATED AN ERROR ON LINE %d", current_location[0]+1);
-                              mvprintw(display_loc[0]+2, display_loc[1], "PRESS ANY KEY TO CONTINUE");
+                              mvprintw(display_loc[0]+1, display_loc[1]," THE ERROR WAS: %s", error_text);
+                              mvprintw(display_loc[0]+3, display_loc[1], "PRESS ANY KEY TO CONTINUE");
                               getch();
                         }
                         break;
@@ -228,13 +230,15 @@ int main(int argc, const char * argv[]) {
                         break;
                     }
                     if (single_char == 'w'){
-                        if (convert_strs_to_BMETRO(edit_view, length, &info)==-1)
+                          char* error_text;
+                        if (convert_strs_to_BMETRO(edit_view, length, &info, &error_text)==-1)
                               mode = OUTPUT;
                         else {
-                              current_location[0] = convert_strs_to_BMETRO(edit_view, length, &info);
+                              current_location[0] = convert_strs_to_BMETRO(edit_view, length, &info, &error_text);
                               erase(); refresh();
                               mvprintw(display_loc[0], display_loc[1], "PARSING YOUR DATA HAS CREATED AN ERROR ON LINE %d", current_location[0]+1);
-                              mvprintw(display_loc[0]+2, display_loc[1], "PRESS ANY KEY TO CONTINUE");
+                              mvprintw(display_loc[0]+1, display_loc[1]," THE ERROR WAS: %s", error_text);
+                              mvprintw(display_loc[0]+3, display_loc[1], "PRESS ANY KEY TO CONTINUE");
                               getch();
                         }
                         break;
