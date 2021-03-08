@@ -547,9 +547,29 @@ int main(int argc, const char * argv[]) {
                 }
             case OUTPUT:
                 erase(); refresh();
+                mvprintw(display_loc[0], display_loc[1], "ENTER FILE NAME (without extension)");
+                move (display_loc[0]+2, display_loc[1]); refresh(); echo();
+                char filename[32], mp3filename[32];
+                memset(filename, '\0', 32);
+                wgetnstr(wnd, filename, 28);
+                memcpy(mp3filename, filename, 32);
+                noecho();
+                { // prevent terminal error
+                     uint16_t index; bool to_break = false;
+                     for (index = 0; index < strlen(filename); index++)
+                     if (filename[index]=='/'){
+                                erase(); mvprintw(display_loc[0], display_loc[1], "ILLEGAL CHAR"); refresh(); sleep(1); to_break = true;
+                                break;
+                          }
+                    if (to_break)
+                    break;
+                }
+                strcat(filename, ".wav");
+                strcat(mp3filename, ".mp3");
+                int16_t filename_length = strlen(filename);
                 int32_t phs = 0;
                 info->current_line = info->current_bar = info->current_beat = info->current_subdv = 0;
-                WavFile* fout = open_wav_file("audio_out.wav", "wb", argv[0]);
+                WavFile* fout = open_wav_file(filename, "wb", argv[0]);
                 while (phs>=0){
                     phs = write_sample_block(output, phs, info);
                     if (wav_write(fout, output, BLOCKSIZE)!= BLOCKSIZE){
@@ -560,18 +580,18 @@ int main(int argc, const char * argv[]) {
                 }
                 wav_close(fout);
                 #ifdef brew
-                char* wav_loc = (char*) malloc(sizeof(char)*(loc_length+13));
-                char* mp3_loc = (char*) malloc(sizeof(char)*(loc_length+13));
-                char* sox_command = (char*) malloc(sizeof(char)*(loc_length*2+2*13+10));
-                char* rm_command = (char*) malloc(sizeof(char)*(loc_length+13+4));
-                memset(wav_loc, '\0', loc_length+13);
-                memset(mp3_loc, '\0', loc_length+13);
-                memset(sox_command, '\0', loc_length*2+2*13+10);
-                memset(rm_command, '\0', loc_length+13+4);
+                char* wav_loc = (char*) malloc(sizeof(char)*(loc_length+filename_length));
+                char* mp3_loc = (char*) malloc(sizeof(char)*(loc_length+filename_length));
+                char* sox_command = (char*) malloc(sizeof(char)*(loc_length*2+2*filename_length+10));
+                char* rm_command = (char*) malloc(sizeof(char)*(loc_length+filename_length+4));
+                memset(wav_loc, '\0', loc_length+filename_length);
+                memset(mp3_loc, '\0', loc_length+filename_length);
+                memset(sox_command, '\0', loc_length*2+2*filename_length+10);
+                memset(rm_command, '\0', loc_length+filename_length+4);
                 memcpy(wav_loc, argv[0], loc_length);
-                strcat(wav_loc, "audio_out.wav");
+                strcat(wav_loc, filename);
                 memcpy(mp3_loc, argv[0], loc_length);
-                strcat(mp3_loc, "audio_out.mp3");
+                strcat(mp3_loc, mp3filename);
                 memcpy(sox_command, "sox -V0 ", 8);
                 strcat(sox_command, wav_loc);
                 strcat(sox_command, " ");
