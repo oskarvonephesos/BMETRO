@@ -39,8 +39,9 @@ mvprintw(9, divider +2, "             A / B produces A pulses");
 mvprintw(11, divider +2, "      (A)/ B produces one pulse of A duration");
 mvprintw(13, divider +2, " (A+B)/ C produces two pulses of A and B durations");
 mvprintw(15, divider +2, " A+B / C produces A+B pulses with accents after A and B");
-mvprintw(17, divider +2, "      a dot in the BPM slot will change BPMs");
+mvprintw(17, divider +2, "      a . in the BPM slot will change BPMs");
 mvprintw(18, divider +2, "     so as to match the smallest note values");
+mvprintw(19, divider +2, "        < or > indicate accel. and rit.");
  for (j=y_offset; j<=num_lines+y_offset; j++){
       mvprintw((j-y_offset)*2+2, line_loc[NUM_BARS], edit_view[j][NUM_BARS]);
       mvprintw((j-y_offset)*2+2, line_loc[NUMERATOR] - strlen(edit_view[j][NUMERATOR]), edit_view[j][NUMERATOR]);
@@ -124,7 +125,7 @@ int main(int argc, const char * argv[]) {
                 mvprintw(display_loc[0] + 10, display_loc[1], "QUIT");
                 move(display_loc[0] +2, display_loc[1]-1);
                 refresh();
-                    num_options = 6;
+                    num_options = 4;
                 }
                 else {
                     mvprintw(display_loc[0] + 2, display_loc[1], "NEW");
@@ -133,7 +134,7 @@ int main(int argc, const char * argv[]) {
                     mvprintw(display_loc[0] + 8, display_loc[1], "QUIT");
                     move(display_loc[0] +2, display_loc[1]-1);
                     refresh();
-                    num_options = 4;
+                    num_options = 3;
                 }
                 while (1){
                     single_int = getch(); single_char = (char) single_int;
@@ -315,7 +316,7 @@ int main(int argc, const char * argv[]) {
                     }
                     else {
                         //surely we can use ASCII to number and specify a number range?
-                        if ((i<3 || (i<9 && current_location[1]==NUMERATOR)|| (i<5 && current_location[1]==BPM_IN)) && (isdigit(single_char) || single_char == '.' || single_char == '+' || single_char == '(' || single_char == ')')){
+                        if ((i<3 || (i<9 && current_location[1]==NUMERATOR)|| (i<5 && current_location[1]==BPM_IN)) && (isdigit(single_char) || single_char == '.' || single_char == '+' || single_char == '(' || single_char == ')' || single_char == '>' || single_char == '<')){
                     edit_view[current_location[0]][current_location[1]][i++] = single_char;
                             if (current_location[1]==NUMERATOR){
                                 mvprintw((current_location[0]-location_y_offset)*2+2, line_loc[current_location[1]]-strlen(edit_view[current_location[0]][current_location[1]]), "%s", edit_view[current_location[0]][current_location[1]]);

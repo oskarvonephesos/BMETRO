@@ -26,6 +26,7 @@
 #include <unistd.h>
 #include "../libwav/wav.h"
 
+#include <ncurses.h>
 #define SR 44100
 #define BLOCKSIZE 1024
 #define TAB_LENGTH 2048
@@ -36,6 +37,7 @@ typedef struct {
     int16_t** numerator;
     uint16_t* denominator;
     float* bpm;
+    float* bpm_incr;
     uint16_t current_line;
     uint16_t current_subdv;
     uint16_t current_beat;
@@ -72,6 +74,7 @@ float* init_click(float freq);
 BMETRO_INFO* init_metro_info(uint16_t num_bars);
 int16_t convert_strs_to_BMETRO(char*** input, uint16_t length, BMETRO_INFO** info, char** error_text);
 uint32_t bpm_to_samp(float bpm);
+int16_t get_bar_length(BMETRO_INFO* info, uint16_t line);
 int32_t write_sample_block(float* output, int32_t phs, BMETRO_INFO*info);
 bool line_is_empty(char*** input, uint16_t line_number);
 FILE* open_file(char* name, const char* restrict_mode, const char* programm_loc);

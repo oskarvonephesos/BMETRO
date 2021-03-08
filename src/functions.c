@@ -36,6 +36,7 @@ BMETRO_INFO* init_metro_info(uint16_t num_bars){
     data->numerator   = malloc(sizeof(int16_t*)*num_bars);
     data->denominator = (uint16_t*)malloc(sizeof(uint16_t)*num_bars);
     data->bpm         = (float*)malloc(sizeof(float)*num_bars);
+    data->bpm_incr    = (float*)calloc(sizeof(float)*num_bars, 1);
     data->in_one      = (bool*)malloc(sizeof(bool)*num_bars);
     data->is_regular  = (bool*)malloc(sizeof(bool)*num_bars);
     int i;
@@ -54,14 +55,16 @@ BMETRO_INFO* init_metro_info(uint16_t num_bars){
     data->length        = num_bars;
     return data;
 }
-char error_strings[7][32]={
+char error_strings[9][64]={
       "EMPTY STRING",
       "LEADING ZERO / SONDERZEICHEN",
       "EXPECTED DIGIT",
       "FINAL + / (",
       "SUCCESSION OF SONDERZEICHEN",
-      "FIRST BPM IS .",
-      "MISC ERROR"
+      "FIRST BPM IS . < >",
+      "MISC ERROR",
+      "UNTERMINATED ACCEL./RIT.",
+      "CHANGING DENOMINATOR DURING ACCEL./RIT CURRENTLY SUPPORTED"
 };
 int16_t convert_strs_to_BMETRO(char*** input, uint16_t length, BMETRO_INFO** info, char** error_text){
     uint16_t i, j, k; bool is_regular, in_one;
@@ -144,13 +147,25 @@ int16_t convert_strs_to_BMETRO(char*** input, uint16_t length, BMETRO_INFO** inf
                }
            }
            //prevent first BPM from referencing previous lines
-           if (input[0][BPM_IN][0] == '.'){
+           if (input[0][BPM_IN][0] == '.' || input[0][BPM_IN][0] == '<' || input[0][BPM_IN][0] == '>'){
                 *error_text = error_strings[5];
                   return i;
           }
+          // prevent denominator changes during accel/rit.
+          if (input[i][BPM_IN][0] == '<' || input[i][BPM_IN][0] == '>'){
+                      if (strcmp(input[i][DENOMINATOR], input[i-1][DENOMINATOR]) != 0){
+                           *error_text = error_strings[8];
+                           return i;
+                     }
+          }
+          //prevent unterminated accel./rit.
+          if (input[length-1][BPM_IN][0]== '>' || input[length-1][BPM_IN][0]=='<'){
+                      *error_text = error_strings[7];
+                      return i;
+          }
            //appropriate chars
            for (j=0; j<strlen(input[i][BPM_IN]); j++){
-                if(isdigit(input[i][BPM_IN][j])==0 && input[i][BPM_IN][j]!='.'){
+                if(isdigit(input[i][BPM_IN][j])==0 && input[i][BPM_IN][j]!='.' && input[i][BPM_IN][j]!='>' && input[i][BPM_IN][j]!='<'){
                      *error_text = error_strings[2];
                        return i;
                }
@@ -159,11 +174,6 @@ int16_t convert_strs_to_BMETRO(char*** input, uint16_t length, BMETRO_INFO** inf
     for (i=0; i<length; i++){
         (*info)->bars[i]        = atoi(input[i][NUM_BARS]);
         (*info)->denominator[i] = atoi(input[i][DENOMINATOR]);
-        if (input[i][BPM_IN][0]== '.'){
-            (*info)->bpm[i] = (*info)->bpm[i-1]*(*info)->denominator[i]/(*info)->denominator[i-1];
-        }
-        else
-            (*info)->bpm[i] = atof(input[i][BPM_IN]);
         if (input[i][NUMERATOR][0]== '('){
              in_one = true;
              if (input[i][NUMERATOR][2]=='+'||input[i][NUMERATOR][3]=='+'||input[i][NUMERATOR][4]=='+'){
@@ -219,12 +229,46 @@ int16_t convert_strs_to_BMETRO(char*** input, uint16_t length, BMETRO_INFO** inf
         (*info)->in_one[i] = in_one;
         (*info)->is_regular[i]= is_regular;
     }
+    //bpm parsing is done last, because it may depend on denominator and numerator parsing
+    for (i=0; i<length;){
+    if (input[i][BPM_IN][0]== '.'){
+        (*info)->bpm[i] = (*info)->bpm[i-1]*(*info)->denominator[i]/(*info)->denominator[i-1];
+        (*info)->bpm_incr[i] = 0;
+        i++;
+    }
+    else if (input[i][BPM_IN][0]== '>'){
+         int16_t jj = i, accel_len = 0, bar_length;
+         while (input[jj][BPM_IN][0]== '>'){
+               bar_length = get_bar_length(*info, jj);
+               accel_len += bar_length* (*info)->bars[jj++];
+      }
+        float bpm_difference = atof(input[jj][BPM_IN]) - atof(input[i-1][BPM_IN]);
+        bpm_difference /= accel_len; int16_t ii;
+        for (ii=i; ii<jj; ii++){
+        (*info)->bpm_incr[ii] = bpm_difference;
+        (*info)->bpm[ii] = (*info)->bpm[ii-1];
+        }
+        i = ii;
+   }
+    else{
+        (*info)->bpm[i] = atof(input[i][BPM_IN]);
+        (*info)->bpm_incr[i] = 0;
+        i++;
+ }
+ }
     (*info)->bars[length] = -1;
     (*info)->current_beat = 0;
     (*info)->current_line = 0;
     if ((*info)->count_in)
     (*info)->bars[0] +=1;
     return -1;
+}
+int16_t get_bar_length(BMETRO_INFO* info, uint16_t line){
+      int16_t length=0, i=0;
+      while (info->numerator[line][i]!=-1){
+            length += info->numerator[line][i++];
+      }
+      return length;
 }
 uint32_t bpm_to_samp(float bpm){
     float bps = bpm/60.0f;
@@ -274,6 +318,7 @@ int32_t write_sample_block(float* output, int32_t phs, BMETRO_INFO*info){
         if (phs>=bpm_length){
             phs = 0;
             info->current_beat++;
+            info->bpm[info->current_line]+=info->bpm_incr[info->current_line];
             if (info->current_beat >= info->numerator[info->current_line][info->current_subdv]){
                   info->current_beat = 0;
                   info->current_subdv++;
@@ -289,6 +334,8 @@ int32_t write_sample_block(float* output, int32_t phs, BMETRO_INFO*info){
                 if (info->bars[info->current_line] == -1){
                     return -1;
                 }
+                if (info->bpm_incr[info->current_line] != 0.0f)
+                info->bpm[info->current_line] = info->bpm[info->current_line-1];
                 info->current_beat  = 0;
                 info->current_subdv = 0;
                 info->current_bar   = 0;
