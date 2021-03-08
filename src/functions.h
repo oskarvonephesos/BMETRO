@@ -32,6 +32,12 @@
 #define TAB_LENGTH 2048
 #define SILENCE 0.0f
 #define LEN_OF_EDIT_VIEW_LINES 12
+typedef enum {
+      MP3_FILE,
+      WAV_FILE,
+      AIFF_FILE,
+      NUM_OUT_FILETYPES
+} OUTPUT_FILETYPE;
 typedef struct {
     int16_t* bars;
     int16_t** numerator;
@@ -50,6 +56,7 @@ typedef struct {
     bool hi;
     bool count_in;
     uint16_t length;
+    OUTPUT_FILETYPE outfile_type;
 } BMETRO_INFO;
 typedef enum {
     WELCOME,
@@ -58,7 +65,6 @@ typedef enum {
     LOADING,
     SAVING,
     PREFERENCES,
-    HELP,
     OUTPUT,
     QUIT = -1
 } DISPLAY_MODE;

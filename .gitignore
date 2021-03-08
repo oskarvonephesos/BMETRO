@@ -1,6 +1,7 @@
 bmetro
 *.wav
 *.mp3
+*.aif
 .log.txt
 .DS_STORE
 */.DS_STORE

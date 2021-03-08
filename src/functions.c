@@ -53,6 +53,7 @@ BMETRO_INFO* init_metro_info(uint16_t num_bars){
     data->hi            = true;
     data->mark_downbeat = true;
     data->length        = num_bars;
+    data->outfile_type  = WAV_FILE;
     return data;
 }
 char error_strings[9][64]={

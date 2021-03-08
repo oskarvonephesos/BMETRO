@@ -126,7 +126,7 @@ int main(int argc, const char * argv[]) {
                 mvprintw(display_loc[0] + 8, display_loc[1], "QUIT");
                 move(display_loc[0] +2, display_loc[1]-1);
                 refresh();
-                    num_options = 4;
+                    num_options = 3;
                 }
                 else {
                     mvprintw(display_loc[0] + 2, display_loc[1], "NEW");
@@ -134,7 +134,7 @@ int main(int argc, const char * argv[]) {
                     mvprintw(display_loc[0] + 6, display_loc[1], "QUIT");
                     move(display_loc[0] +2, display_loc[1]-1);
                     refresh();
-                    num_options = 3;
+                    num_options = 2;
                 }
                 while (1){
                     single_int = getch(); single_char = (char) single_int;
@@ -522,34 +522,13 @@ int main(int argc, const char * argv[]) {
                 }
                 mode = EDITING;
                 break;
-            case HELP:
-                erase(); refresh();
-                uint8_t my_display_loc = max_y -18;
-                mvprintw(my_display_loc, max_x/4, "SYNTAX OF BAR SIGNATURES");
-                mvprintw(my_display_loc+2, max_x/4, "A BAR OF 2 / 4 WILL RESULT IN TWO PULSES ONE QUARTER NOTE APART");
-                mvprintw(my_display_loc+3, max_x/4, "\t(i.e. 2 / 4 IN TWO)");
-                mvprintw(my_display_loc+4, max_x/4, "A BAR OF (3) / 4 WILL RESULT IN ONE PULSE THAT TAKES THREE QUARTER NOTES");
-                mvprintw(my_display_loc+5, max_x/4, "\t(i.e. 3/ 4 IN ONE)");
-                mvprintw(my_display_loc+6, max_x/4, "A BAR OF 3 + 4 / 4 WILL RESULT IN SEVEN PULSES");
-                mvprintw(my_display_loc+7, max_x/4, "\tWITH ACCENTS ON BEATS ONE AND FOUR");
-                mvprintw(my_display_loc+8, max_x/4, "\t(i.e. 7 / 4 IN SEVEN)");
-                mvprintw(my_display_loc+9, max_x/4, "AND A BAR OF (3 + 4) / 4 WILL RESULT IN TWO PULSES:");
-                mvprintw(my_display_loc+10, max_x/4, "\tTHE FIRST TAKING 3, THE SECOND 4 BEATS");
-                mvprintw(my_display_loc+11, max_x/4, "\t(i.e. 7 / 4 IN TWO)");
-                mvprintw(my_display_loc+13, max_x/4, "'.' IN THE BPM SLOT TELLS BMETRO TO USE THE TEMPO FROM THE PRECEDING SECTION");
-                mvprintw(my_display_loc+14, max_x/4, "\tKEEPING THE SMALLEST NOTE VALUES CONSTANT");
-                mvprintw(my_display_loc+16, max_x/4, "PRESS ANY KEY TO RETURN TO THE MENU");
-                refresh();
-                getch();
-                mode = WELCOME;
-                    break;
             case PREFERENCES:
                 {
                 uint8_t option = 0;
                 erase(); refresh();
                 mvprintw(display_loc[0], display_loc[1], "SETTINGS");
-                mvprintw(display_loc[0]+6, display_loc[1], "TO CYCLE THROUGH SETTINGS HIT ENTER");
-                mvprintw(display_loc[0]+7, display_loc[1], "TO EXIT BACK TO MENU HIT Q");
+                mvprintw(display_loc[0]+8, display_loc[1], "TO CYCLE THROUGH SETTINGS HIT ENTER");
+                mvprintw(display_loc[0]+9, display_loc[1], "TO CONTINUE PRESS SPACE");
                 refresh();
                 while (1){
                     if (info->count_in)
@@ -560,23 +539,52 @@ int main(int argc, const char * argv[]) {
                         mvprintw(display_loc[0]+2, display_loc[1], "MARK DOWNBEAT ENABLED ");
                     else
                         mvprintw(display_loc[0]+2, display_loc[1], "MARK DOWNBEAT DISABLED");
+                  #ifdef brew
+                    switch(info->outfile_type){
+                          case WAV_FILE:
+                          mvprintw(display_loc[0]+6, display_loc[1], "OUTFILE FORMAT: WAV");
+                          break;
+                          case MP3_FILE:
+                          mvprintw(display_loc[0]+6, display_loc[1], "OUTFILE FORMAT: MP3");
+                          break;
+                          case AIFF_FILE:
+                          mvprintw(display_loc[0]+6, display_loc[1], "OUTFILE FORMAT: AIF");
+                          break;
+                          default:
+                          break;
+                    }
+                    #endif
                     move(display_loc[0]+2+option*2, display_loc[1]-1);
                     refresh();
                     single_int = getch(); single_char = (char) single_int;
                     if (single_char == '\n'){
-                         if(option == 0){
+                         switch(option){
+                               case 0:
                                info->mark_downbeat = !info->mark_downbeat;
                                info->hi = info->mark_downbeat;
-                         }
-                         else {
-                        info->count_in = !info->count_in;
+                               break;
+                               case 1:
+                               info->count_in = !info->count_in;
+                               break;
+                               case 2:
+                               if (info->outfile_type < NUM_OUT_FILETYPES -1)
+                               info->outfile_type++;
+                               else
+                               info->outfile_type = 0;
+                               break;
+                               default:
+                               break;
                          }
                     }
                     else if (single_int == KEY_UP && option > 0)
                         option--;
+                  #ifdef brew
                     else if (single_int == KEY_DOWN && option < 2)
+                  #else
+                    else if (single_int == KEY_DOWN && option < 1)
+                  #endif
                         option++;
-                else if (single_char == 'q')
+                else if (single_char == ' ')
                     break;
                 }
                 mode = OUTPUT;
@@ -602,7 +610,19 @@ int main(int argc, const char * argv[]) {
                     break;
                 }
                 strcat(filename, ".wav");
-                strcat(mp3filename, ".mp3");
+                switch(info->outfile_type){
+                      case MP3_FILE:
+                      strcat(mp3filename, ".mp3");
+                      break;
+                      case WAV_FILE:
+                      strcat(mp3filename, ".wav");
+                      break;
+                      case AIFF_FILE:
+                      strcat(mp3filename, ".aif");
+                      break;
+                      default:
+                      break;
+                }
                 int16_t filename_length = strlen(filename);
                 int32_t phs = 0;
                 info->current_line = info->current_bar = info->current_beat = info->current_subdv = 0;
