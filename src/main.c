@@ -70,6 +70,14 @@ int main(int argc, const char * argv[]) {
     display_loc[0] = max_y/3; display_loc[1] = max_x/3;
     if ((display_loc[0]+16)>=max_y)
         display_loc[0] = max_y -16;
+    //LICENSE INFO
+    mvprintw(max_y/2-3, max_x/4,  "<BMETRO>  Copyright (C) <2021>  <Richard Schwennicke>");
+    mvprintw(max_y/2-2, max_x/4,"This program comes with ABSOLUTELY NO WARRANTY.");
+    mvprintw(max_y/2-1, max_x/4,"This is free software, and you are welcome to re-");
+    mvprintw(max_y/2, max_x/4,"distribute it under certain conditions; for details");
+    mvprintw(max_y/2+1, max_x/4,"see the LICENSE.md in the current directory.");
+    mvprintw(max_y/2+3, max_x/4, "press any key to continue");
+    getch();
     DISPLAY_MODE mode = WELCOME;
     char single_char; int single_int;
     uint16_t edit_view_length = 128;
