@@ -23,6 +23,22 @@
 
 static const uint8_t line_loc[NUM_DISPLAY_LOCATIONS] = {3, 15, 18, 31};
 
+void redraw_edit_screen(char*** edit_view, int16_t y_offset, uint16_t num_lines, uint16_t max_y){
+uint16_t j;
+erase(); refresh();
+mvprintw(0, 0, "NUM BARS     TIME SIGNATURE    BPM");
+mvprintw(max_y-1, 0, "for navigation use arrow keys; to commit and leave this mode press 'e'; to save to file press 's'");
+ for (j=y_offset; j<=num_lines+y_offset; j++){
+      mvprintw((j-y_offset)*2+2, line_loc[NUM_BARS], edit_view[j][NUM_BARS]);
+      mvprintw((j-y_offset)*2+2, line_loc[NUMERATOR] - strlen(edit_view[j][NUMERATOR]), edit_view[j][NUMERATOR]);
+      mvprintw((j-y_offset)*2+2, line_loc[DENOMINATOR], edit_view[j][DENOMINATOR]);
+      mvprintw((j-y_offset)*2+2, line_loc[BPM_IN], edit_view[j][BPM_IN]);
+ }
+ for (j=0; j<=num_lines; j++){
+     mvprintw(j*2+2, line_loc[NUMERATOR]+2, "/");
+} refresh();
+}
+
 int main(int argc, const char * argv[]) {
     //NCURSES RELATED
     WINDOW* wnd = initscr();
@@ -176,26 +192,13 @@ int main(int argc, const char * argv[]) {
                 //deliberate fall-through
             case EDITING:
                   mode = EDITING;
-                noecho(); erase(); refresh();
-                mvprintw(0, 0, "NUM BARS     TIME SIGNATURE    BPM");
-                mvprintw(max_y-1, 0, "for navigation use arrow keys; to commit and leave this mode press 'e'; to save to file press 's'"); refresh();
+                noecho();
                 uint16_t num_lines = (max_y - 4)/2;
-                for (i=0; i<=num_lines; i++){
-                    mvprintw(i*2+2, line_loc[NUMERATOR]+2, "/");
-              }
-              {
-                    uint8_t print_length = num_lines<length ? num_lines: length;
-                for (i=0; i<=print_length; i++){
-                    mvprintw(i*2+2, line_loc[NUM_BARS], edit_view[i][NUM_BARS]);
-                    mvprintw(i*2+2, line_loc[NUMERATOR] - strlen(edit_view[i][NUMERATOR]), edit_view[i][NUMERATOR]);
-                    mvprintw(i*2+2, line_loc[DENOMINATOR], edit_view[i][DENOMINATOR]);
-                    mvprintw(i*2+2, line_loc[BPM_IN], edit_view[i][BPM_IN]);
-                }
-              }
-                move(2, line_loc[NUM_BARS]+strlen(edit_view[0][0]));
-                refresh();
                 uint16_t current_location[2] = {0, 0};
                 int16_t location_y_offset = 0;
+                redraw_edit_screen(edit_view, location_y_offset, num_lines, max_y);
+                move(2, line_loc[NUM_BARS]+strlen(edit_view[0][0]));
+                refresh();
                 i = strlen(edit_view[0][0]);
                 bool location_changed = false;;
                 while(1){
@@ -232,18 +235,7 @@ int main(int argc, const char * argv[]) {
                           location_y_offset--;
                           current_location[0]--;
                           location_changed = true;
-                          erase(); refresh();
-                          mvprintw(0, 0, "NUM BARS     TIME SIGNATURE    BPM");
-                          mvprintw(max_y-1, 0, "for navigation use arrow keys; to commit and leave this mode press 'e'; to save to file press 's'");
-                           for (j=location_y_offset; j<=num_lines+location_y_offset; j++){
-                                mvprintw((j-location_y_offset)*2+2, line_loc[NUM_BARS], edit_view[j][NUM_BARS]);
-                                mvprintw((j-location_y_offset)*2+2, line_loc[NUMERATOR] - strlen(edit_view[j][NUMERATOR]), edit_view[j][NUMERATOR]);
-                                mvprintw((j-location_y_offset)*2+2, line_loc[DENOMINATOR], edit_view[j][DENOMINATOR]);
-                                mvprintw((j-location_y_offset)*2+2, line_loc[BPM_IN], edit_view[j][BPM_IN]);
-                           }
-                           for (j=0; j<=num_lines; j++){
-                               mvprintw(j*2+2, line_loc[NUMERATOR]+2, "/");
-                         } refresh();
+                          redraw_edit_screen(edit_view, location_y_offset, num_lines, max_y);
                     }
                     //else if it isn't at top of screen (but still within bounds)
                     else if (single_int == KEY_UP && current_location[0]>0){
@@ -255,23 +247,12 @@ int main(int argc, const char * argv[]) {
                         current_location[0]++;
                     }
                     else if (single_int == KEY_DOWN && current_location[0]-location_y_offset>=num_lines && current_location[0]<(edit_view_length-1)){
-                          if (length < num_lines -2)
+                          if ((length - location_y_offset) < num_lines -2)
                               continue;
                               location_y_offset++;
                               current_location[0]++;
                               location_changed = true;
-                              erase(); refresh();
-                              mvprintw(0, 0, "NUM BARS     TIME SIGNATURE    BPM");
-                              mvprintw(max_y-1, 0, "for navigation use arrow keys; to commit and leave this mode press 'e'; to save to file press 's'");
-                                for (j=location_y_offset; j<=num_lines+location_y_offset; j++){
-                                    mvprintw((j-location_y_offset)*2+2, line_loc[NUM_BARS], edit_view[j][NUM_BARS]);
-                                    mvprintw((j-location_y_offset)*2+2, line_loc[NUMERATOR] - strlen(edit_view[j][NUMERATOR]), edit_view[j][NUMERATOR]);
-                                    mvprintw((j-location_y_offset)*2+2, line_loc[DENOMINATOR], edit_view[j][DENOMINATOR]);
-                                    mvprintw((j-location_y_offset)*2+2, line_loc[BPM_IN], edit_view[j][BPM_IN]);
-                                }
-                                for (j=0; j<=num_lines; j++){
-                                   mvprintw(j*2+2, line_loc[NUMERATOR]+2, "/");
-                             } refresh();
+                              redraw_edit_screen(edit_view, location_y_offset, num_lines, max_y);
                     }
                     else if (single_int == KEY_RIGHT && current_location[1]<NUM_DISPLAY_LOCATIONS-1){
                         location_changed = true;
@@ -288,18 +269,7 @@ int main(int argc, const char * argv[]) {
                                     location_y_offset++;
                                     current_location[0]++;
                                     location_changed = true;
-                                    erase(); refresh();
-                                    mvprintw(0, 0, "NUM BARS     TIME SIGNATURE    BPM");
-                                    mvprintw(max_y-1, 0, "for navigation use arrow keys; to commit and leave this mode press 'e'; to save to file press 's'");
-                                      for (j=location_y_offset; j<=num_lines+location_y_offset; j++){
-                                          mvprintw((j-location_y_offset)*2+2, line_loc[NUM_BARS], edit_view[j][NUM_BARS]);
-                                          mvprintw((j-location_y_offset)*2+2, line_loc[NUMERATOR] - strlen(edit_view[j][NUMERATOR]), edit_view[j][NUMERATOR]);
-                                          mvprintw((j-location_y_offset)*2+2, line_loc[DENOMINATOR], edit_view[j][DENOMINATOR]);
-                                          mvprintw((j-location_y_offset)*2+2, line_loc[BPM_IN], edit_view[j][BPM_IN]);
-                                      }
-                                      for (j=0; j<=num_lines; j++){
-                                         mvprintw(j*2+2, line_loc[NUMERATOR]+2, "/");
-                                   } refresh();
+                                    redraw_edit_screen(edit_view, location_y_offset, num_lines, max_y);
                           }
                     }
                     else if (single_int == 127 && i>0/*backspace*/){
