@@ -123,8 +123,7 @@ int main(int argc, const char * argv[]) {
                 mvprintw(display_loc[0] + 2, display_loc[1], "CONTINUE EDITING");
                 mvprintw(display_loc[0] + 4, display_loc[1], "NEW");
                 mvprintw(display_loc[0] + 6, display_loc[1], "LOAD SAVED");
-                mvprintw(display_loc[0] + 8, display_loc[1], "SETTINGS");
-                mvprintw(display_loc[0] + 10, display_loc[1], "QUIT");
+                mvprintw(display_loc[0] + 8, display_loc[1], "QUIT");
                 move(display_loc[0] +2, display_loc[1]-1);
                 refresh();
                     num_options = 4;
@@ -132,8 +131,7 @@ int main(int argc, const char * argv[]) {
                 else {
                     mvprintw(display_loc[0] + 2, display_loc[1], "NEW");
                     mvprintw(display_loc[0] + 4, display_loc[1], "LOAD SAVED");
-                    mvprintw(display_loc[0] + 6, display_loc[1], "SETTINGS");
-                    mvprintw(display_loc[0] + 8, display_loc[1], "QUIT");
+                    mvprintw(display_loc[0] + 6, display_loc[1], "QUIT");
                     move(display_loc[0] +2, display_loc[1]-1);
                     refresh();
                     num_options = 3;
@@ -165,9 +163,6 @@ int main(int argc, const char * argv[]) {
                         mode = LOADING;
                         break;
                     case 3:
-                        mode = PREFERENCES;
-                        break;
-                    case 4:
                         mode = QUIT;
                         break;
                     default:
@@ -183,9 +178,6 @@ int main(int argc, const char * argv[]) {
                             mode = LOADING;
                             break;
                         case 2:
-                            mode = PREFERENCES;
-                            break;
-                        case 3:
                             mode = QUIT;
                             break;
                         default:
@@ -235,7 +227,7 @@ int main(int argc, const char * argv[]) {
                     if (single_char == 'w'){
                           char* error_text;
                         if (convert_strs_to_BMETRO(edit_view, length, &info, &error_text)==-1)
-                              mode = OUTPUT;
+                              mode = PREFERENCES;
                         else {
                               current_location[0] = convert_strs_to_BMETRO(edit_view, length, &info, &error_text);
                               erase(); refresh();
@@ -587,7 +579,7 @@ int main(int argc, const char * argv[]) {
                 else if (single_char == 'q')
                     break;
                 }
-                mode = WELCOME;
+                mode = OUTPUT;
                 break;
                 }
             case OUTPUT:
