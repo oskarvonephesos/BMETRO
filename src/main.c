@@ -23,11 +23,24 @@
 
 static const uint8_t line_loc[NUM_DISPLAY_LOCATIONS] = {3, 15, 18, 31};
 
-void redraw_edit_screen(char*** edit_view, int16_t y_offset, uint16_t num_lines, uint16_t max_y){
+void redraw_edit_screen(char*** edit_view, int16_t y_offset, uint16_t num_lines, uint16_t max_y, uint16_t max_x){
 uint16_t j;
 erase(); refresh();
+uint16_t divider = line_loc[NUM_BARS]+6>2*max_x/5?line_loc[NUM_BARS]+6:2*max_x/5;
+for (j=0; j<max_y; j++){
+      mvprintw(j, divider, "|");
+}
 mvprintw(0, 0, "NUM BARS     TIME SIGNATURE    BPM");
-mvprintw(max_y-1, 0, "for navigation use arrow keys; to commit and leave this mode press 'e'; to save to file press 's'");
+mvprintw(0, divider +2, "           for navigation use arrow keys");
+mvprintw(2, divider +2, "            to exit this mode press 'e'");
+mvprintw(4, divider +2, "             to save to file press 's'");
+mvprintw(6, divider +2, "             to write audio press 'w'");
+mvprintw(9, divider +2, "             A / B produces A pulses");
+mvprintw(11, divider +2, "      (A)/ B produces one pulse of A duration");
+mvprintw(13, divider +2, " (A+B)/ C produces two pulses of A and B durations");
+mvprintw(15, divider +2, " A+B / C produces A+B pulses with accents after A and B");
+mvprintw(17, divider +2, "      a dot in the BPM slot will change BPMs");
+mvprintw(18, divider +2, "     so as to match the smallest note values");
  for (j=y_offset; j<=num_lines+y_offset; j++){
       mvprintw((j-y_offset)*2+2, line_loc[NUM_BARS], edit_view[j][NUM_BARS]);
       mvprintw((j-y_offset)*2+2, line_loc[NUMERATOR] - strlen(edit_view[j][NUMERATOR]), edit_view[j][NUMERATOR]);
@@ -44,6 +57,12 @@ int main(int argc, const char * argv[]) {
     WINDOW* wnd = initscr();
     uint16_t max_x, max_y;
     getmaxyx(wnd, max_y, max_x);
+    if (max_y < 20 || max_x < 120){
+          erase(); mvprintw(max_y/3, max_x/4, "PLEASE GO TO TERMINAL SETTINGS");
+          mvprintw(max_y/3 +1, max_x/4, "AND SELECT A WINDOW SIZE OF AT LEAST");
+          mvprintw(max_y/3 +2, max_x/4, "20 LINES AND 120 COLUMNS");
+          refresh(); sleep(3); mvprintw(max_y/3 +4, max_x/4, "PRESS ANY KEY TO CONTINUE"); refresh();getch();
+   }
     uint16_t display_loc[2];
     display_loc[0] = max_y/3; display_loc[1] = max_x/3;
     if ((display_loc[0]+16)>=max_y)
@@ -101,10 +120,8 @@ int main(int argc, const char * argv[]) {
                 mvprintw(display_loc[0] + 2, display_loc[1], "CONTINUE EDITING");
                 mvprintw(display_loc[0] + 4, display_loc[1], "NEW");
                 mvprintw(display_loc[0] + 6, display_loc[1], "LOAD SAVED");
-                mvprintw(display_loc[0] + 8, display_loc[1], "OUTPUT");
-                mvprintw(display_loc[0] + 10, display_loc[1], "HELP");
-                mvprintw(display_loc[0] + 12, display_loc[1], "SETTINGS");
-                mvprintw(display_loc[0] + 14, display_loc[1], "QUIT");
+                mvprintw(display_loc[0] + 8, display_loc[1], "SETTINGS");
+                mvprintw(display_loc[0] + 10, display_loc[1], "QUIT");
                 move(display_loc[0] +2, display_loc[1]-1);
                 refresh();
                     num_options = 6;
@@ -112,9 +129,8 @@ int main(int argc, const char * argv[]) {
                 else {
                     mvprintw(display_loc[0] + 2, display_loc[1], "NEW");
                     mvprintw(display_loc[0] + 4, display_loc[1], "LOAD SAVED");
-                    mvprintw(display_loc[0] + 6, display_loc[1], "HELP");
-                    mvprintw(display_loc[0] + 8, display_loc[1], "SETTINGS");
-                    mvprintw(display_loc[0] + 10, display_loc[1], "QUIT");
+                    mvprintw(display_loc[0] + 6, display_loc[1], "SETTINGS");
+                    mvprintw(display_loc[0] + 8, display_loc[1], "QUIT");
                     move(display_loc[0] +2, display_loc[1]-1);
                     refresh();
                     num_options = 4;
@@ -146,15 +162,9 @@ int main(int argc, const char * argv[]) {
                         mode = LOADING;
                         break;
                     case 3:
-                        mode = OUTPUT;
-                        break;
-                    case 4:
-                        mode = HELP;
-                        break;
-                    case 5:
                         mode = PREFERENCES;
                         break;
-                    case 6:
+                    case 4:
                         mode = QUIT;
                         break;
                     default:
@@ -170,12 +180,9 @@ int main(int argc, const char * argv[]) {
                             mode = LOADING;
                             break;
                         case 2:
-                            mode = HELP;
-                            break;
-                        case 3:
                             mode = PREFERENCES;
                             break;
-                        case 4:
+                        case 3:
                             mode = QUIT;
                             break;
                         default:
@@ -196,7 +203,7 @@ int main(int argc, const char * argv[]) {
                 uint16_t num_lines = (max_y - 4)/2;
                 uint16_t current_location[2] = {0, 0};
                 int16_t location_y_offset = 0;
-                redraw_edit_screen(edit_view, location_y_offset, num_lines, max_y);
+                redraw_edit_screen(edit_view, location_y_offset, num_lines, max_y, max_x);
                 move(2, line_loc[NUM_BARS]+strlen(edit_view[0][0]));
                 refresh();
                 i = strlen(edit_view[0][0]);
@@ -220,6 +227,18 @@ int main(int argc, const char * argv[]) {
                         mode = SAVING;
                         break;
                     }
+                    if (single_char == 'w'){
+                        if (convert_strs_to_BMETRO(edit_view, length, &info)==-1)
+                              mode = OUTPUT;
+                        else {
+                              current_location[0] = convert_strs_to_BMETRO(edit_view, length, &info);
+                              erase(); refresh();
+                              mvprintw(display_loc[0], display_loc[1], "PARSING YOUR DATA HAS CREATED AN ERROR ON LINE %d", current_location[0]+1);
+                              mvprintw(display_loc[0]+2, display_loc[1], "PRESS ANY KEY TO CONTINUE");
+                              getch();
+                        }
+                        break;
+                    }
                     if (single_int == KEY_LEFT && current_location[1]>0){
                         location_changed = true;
                         current_location[1]--;
@@ -235,7 +254,7 @@ int main(int argc, const char * argv[]) {
                           location_y_offset--;
                           current_location[0]--;
                           location_changed = true;
-                          redraw_edit_screen(edit_view, location_y_offset, num_lines, max_y);
+                          redraw_edit_screen(edit_view, location_y_offset, num_lines, max_y, max_x);
                     }
                     //else if it isn't at top of screen (but still within bounds)
                     else if (single_int == KEY_UP && current_location[0]>0){
@@ -252,7 +271,7 @@ int main(int argc, const char * argv[]) {
                               location_y_offset++;
                               current_location[0]++;
                               location_changed = true;
-                              redraw_edit_screen(edit_view, location_y_offset, num_lines, max_y);
+                              redraw_edit_screen(edit_view, location_y_offset, num_lines, max_y, max_x);
                     }
                     else if (single_int == KEY_RIGHT && current_location[1]<NUM_DISPLAY_LOCATIONS-1){
                         location_changed = true;
@@ -269,7 +288,7 @@ int main(int argc, const char * argv[]) {
                                     location_y_offset++;
                                     current_location[0]++;
                                     location_changed = true;
-                                    redraw_edit_screen(edit_view, location_y_offset, num_lines, max_y);
+                                    redraw_edit_screen(edit_view, location_y_offset, num_lines, max_y, max_x);
                           }
                     }
                     else if (single_int == 127 && i>0/*backspace*/){
