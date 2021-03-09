@@ -65,7 +65,7 @@ char error_strings[9][64]={
       "FIRST BPM IS . < >",
       "MISC ERROR",
       "UNTERMINATED ACCEL./RIT.",
-      "CHANGING DENOMINATOR DURING ACCEL./RIT CURRENTLY SUPPORTED"
+      "CHANGING DENOMINATOR DURING ACCEL./RIT. CURRENTLY NOT SUPPORTED"
 };
 int16_t convert_strs_to_BMETRO(char*** input, uint16_t length, BMETRO_INFO** info, char** error_text){
     uint16_t i, j, k; bool is_regular, in_one;
