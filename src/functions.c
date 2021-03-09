@@ -237,9 +237,9 @@ int16_t convert_strs_to_BMETRO(char*** input, uint16_t length, BMETRO_INFO** inf
         (*info)->bpm_incr[i] = 0;
         i++;
     }
-    else if (input[i][BPM_IN][0]== '>'){
+    else if (input[i][BPM_IN][0]== '>' || input[i][BPM_IN][0]== '<'){
          int16_t jj = i, accel_len = 0, bar_length;
-         while (input[jj][BPM_IN][0]== '>'){
+         while (input[jj][BPM_IN][0]== '>' || input[jj][BPM_IN][0]== '<'){
                bar_length = get_bar_length(*info, jj);
                accel_len += bar_length* (*info)->bars[jj++];
       }

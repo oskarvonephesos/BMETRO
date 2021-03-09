@@ -31,7 +31,7 @@
 #define BLOCKSIZE 1024
 #define TAB_LENGTH 2048
 #define SILENCE 0.0f
-#define LEN_OF_EDIT_VIEW_LINES 12
+#define LEN_OF_EDIT_VIEW_LINES 32
 typedef enum {
       MP3_FILE,
       WAV_FILE,
