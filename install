@@ -30,4 +30,5 @@ then
 ./configure
 else
 xcode-select --install
+./configure
 fi
