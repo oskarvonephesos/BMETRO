@@ -1,3 +1,10 @@
+if test -e endian.c; then rm endian.c; fi;
+echo "int main(){ int a = 1; return *((char*)&a);}" >> endian.c
+gcc endian.c -o endian
+./endian
+if [ "$?" != "1" ]; then echo "can only output raw data since you have a big endian machine";
+make BMETRO CFLAGS= " -Draw"
+else
 if test -e /usr/local/Homebrew #is homebrew installed?
       then
       if test -e ./bmetro #delete BMETRO if it exists (so as to force make with CFLAGS)
@@ -25,3 +32,5 @@ echo #############################################################
 echo #############################################################
 make BMETRO
 fi;
+fi;
+rm endian && rm endian.c
