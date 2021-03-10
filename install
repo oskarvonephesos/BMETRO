@@ -27,7 +27,7 @@ xcode-select -p
 ##if xcode-select doesn't find commandlinetools, it returns 2
 if [[ $? == 0 ]]
 then
-make
+./configure
 else
 xcode-select --install
 fi
