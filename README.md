@@ -4,7 +4,12 @@ BMETRO is a tiny application you can use to create click tracks in various audio
 
 # INSTALLATION
 
-To install, download, navigate to the directory and either run make or ./configure. Configure will attempt to install sox via homebrew and, if this succeeds, will enable exporting to mp3 and aif which reduces file sizes by a factor of 20.
+If you are not a developer:
+
+download the code and run install. It will check for CommandLineTools and guide you through their installation if necessary. If an executable called bmetro does not appear, re-run install.
+
+Else:
+Download, navigate to the directory and either run make or ./configure. Configure will attempt to install sox via homebrew and, if this succeeds, will enable exporting to mp3 and aif which reduces file sizes by a factor of 20.
 
 # LICENSE INFORMATION
 
