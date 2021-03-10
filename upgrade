@@ -1,28 +1,15 @@
-if test -e endian.c; then rm endian.c; fi;
-echo "int main(){ int a = 1; return *((char*)&a);}" >> endian.c
-gcc endian.c -o endian
-./endian
-if [ "$?" != "1" ]; then echo "can only output raw data since you have a big endian machine";
-make BMETRO CFLAGS= " -Draw"
-else
 if test -e /opt/homebrew #is homebrew installed?
       then
-      if test -e ./bmetro #delete BMETRO if it exists (so as to force make with CFLAGS)
-      then
-      rm bmetro
-      fi
+git pull
 make sox && make BMETRO CFLAGS=" -Dbrew"
 elif test -e /usr/local/Homebrew #alternative location
       then
-            if test -e ./bmetro
-            then
-            rm bmetro
-            fi
+      git pull
       make sox && make BMETRO CFLAGS=" -Dbrew"
 else
 echo #############################################################
 echo #############################################################
-echo Please consider installing Homebrew and rerunning ./configure.
+echo Please consider installing Homebrew and rerunning ./upgrade.
 echo Of course BMETRO will still work without it, though.
 echo "i.e. check out https://brew.sh/"
 echo #############################################################
@@ -32,5 +19,3 @@ echo #############################################################
 echo #############################################################
 make BMETRO
 fi;
-fi;
-rm endian && rm endian.c
