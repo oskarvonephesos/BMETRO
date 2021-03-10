@@ -1,0 +1,33 @@
+##three different ways of getting the file path should yield one usable result##
+PATH1=` pwd `
+PATH2=` dirname "$(readlink  "$0")" `
+PATH3=` dirname $0`
+echo $PATH1
+echo $PATH2
+echo $PATH3
+
+#strlen operator in .sh
+if [[ ${#PATH1} > ${#PATH2} ]]
+      then
+      if [[ ${#PATH1} > ${#PATH3} ]]
+      then
+            cd $PATH1
+      else
+      cd $PATH3
+      fi
+else
+      if [[ ${#PATH2} > ${#PATH3} ]]
+      then
+      cd $PATH2
+      else
+      cd $PATH3
+      fi
+fi
+xcode-select -p
+##if xcode-select doesn't find commandlinetools, it returns 2
+if [[ $? == 0 ]]
+then
+make
+else
+xcode-select --install
+fi
