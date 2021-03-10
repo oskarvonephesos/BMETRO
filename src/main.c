@@ -664,6 +664,7 @@ int main(int argc, const char * argv[]) {
                 memcpy(rm_command, "rm ", 3);
                 strcat(rm_command, wav_loc);
                 system(sox_command);
+                if (info->outfile_type != WAV_FILE)
                 system(rm_command);
                   free(wav_loc);
                   free(mp3_loc);
