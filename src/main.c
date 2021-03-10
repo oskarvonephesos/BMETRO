@@ -486,6 +486,7 @@ int main(int argc, const char * argv[]) {
                 }
                 mvprintw(display_loc[0]+2+(2*num_saves), display_loc[1], "If your file doesn't show up, place it");
                 mvprintw(display_loc[0]+3+(2*num_saves), display_loc[1], "in this folder and choose this option");
+                mvprintw(display_loc[0]+5+(2*num_saves), display_loc[1], "to exit press e");
                 move(display_loc[0]+2, display_loc[1]-1);
                 refresh();
                 uint8_t chosen = 0;
@@ -495,12 +496,16 @@ int main(int argc, const char * argv[]) {
                         chosen--;
                     else if (single_int == KEY_DOWN && chosen<=num_saves)
                         chosen++;
+                  else if (single_char == 'e'){
+                        mode = WELCOME;
+                        break;
+                  }
                     else if (single_char == '\n')
                         break;
                     move(display_loc[0] + 2+ 2*chosen, display_loc[1]-1);
                     refresh();
                 }
-                if (chosen==num_saves){
+                if (chosen==num_saves && single_char != 'e'){
                       fclose(flog);
                       system("ls *.bm >> .log.txt");
                       char scan_line[256];
@@ -514,6 +519,11 @@ int main(int argc, const char * argv[]) {
                      fclose(flog);
                      remove_file(log_loc, argv[0]);
                      flog = fopen(log_loc, "w");
+                     erase(); refresh();
+                     mvprintw(display_loc[0]+2, display_loc[1], "UPDATE SAVE STATES");
+                     mvprintw(display_loc[0]+3, display_loc[1], "LET'S TRY AGAIN");
+                     move(display_loc[0]+2, display_loc[1]-1)
+                     refresh(); sleep(1);
                       break;
                 }
                 FILE* load_file = open_file(save_locs[chosen], "r", argv[0]);
