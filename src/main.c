@@ -522,7 +522,7 @@ int main(int argc, const char * argv[]) {
                      erase(); refresh();
                      mvprintw(display_loc[0]+2, display_loc[1], "UPDATE SAVE STATES");
                      mvprintw(display_loc[0]+3, display_loc[1], "LET'S TRY AGAIN");
-                     move(display_loc[0]+2, display_loc[1]-1)
+                     move(display_loc[0]+2, display_loc[1]-1);
                      refresh(); sleep(1);
                       break;
                 }
