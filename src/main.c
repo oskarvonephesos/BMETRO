@@ -651,7 +651,6 @@ int main(int argc, const char * argv[]) {
                         mvprintw(10, 10, "ERROR");
                         refresh();
                     }
-                    //write_out(output, fout);
                 }
                 wav_close(fout);
                 #ifdef brew
@@ -673,9 +672,10 @@ int main(int argc, const char * argv[]) {
                 strcat(sox_command, mp3_loc);
                 memcpy(rm_command, "rm ", 3);
                 strcat(rm_command, wav_loc);
+                if (info->outfile_type != WAV_FILE){
                 system(sox_command);
-                if (info->outfile_type != WAV_FILE)
                 system(rm_command);
+                  }
                   free(wav_loc);
                   free(mp3_loc);
                   free(sox_command);

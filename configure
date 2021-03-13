@@ -27,7 +27,7 @@ echo Of course BMETRO will still work without it, though.
 echo "i.e. check out https://brew.sh/"
 echo #############################################################
 echo "(If Homebrew is installed, but for some reason I haven't found it)"
-echo "(Please run rm "'"bmetro && make BMETRO CFLAGS=" -Dbrew""'")"
+echo "(Please run "'" rm bmetro && make BMETRO CFLAGS=" -Dbrew""'")"
 echo #############################################################
 echo #############################################################
 make BMETRO
