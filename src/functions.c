@@ -375,7 +375,6 @@ WavFile* open_wav_file(char* name, const char* restrict_mode, const char* progra
     strcat(file_path, name);
     fp = wav_open(file_path, restrict_mode);
     wav_set_format(fp, WAV_FORMAT_IEEE_FLOAT);
-    wav_set_sample_size(fp, sizeof(float));
     wav_set_num_channels(fp, 1);
     wav_set_sample_rate(fp, SR);
     return fp;
